@@ -1,0 +1,18 @@
+name: AltDetector
+main: com.bobcat00.altdetector.AltDetector
+version: 1.01
+author: Bobcat00
+description: Detects possible alt accounts
+api-version: 1.13
+commands:
+  alt:
+    description: Lists possible alt accounts of player.
+    permission: altdetector.alt
+    usage: "/alt [player]"
+permissions:
+  altdetector.alt:
+    description: Allows use of the /alt command
+    default: op
+  altdetector.notify:
+    description: Notifies this player when an alt is detected
+    default: op
