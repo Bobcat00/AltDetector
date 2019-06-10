@@ -1,6 +1,6 @@
 name: AltDetector
 main: com.bobcat00.altdetector.AltDetector
-version: 1.01
+version: ${project.version}
 author: Bobcat00
 description: Detects possible alt accounts
 api-version: 1.13

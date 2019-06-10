@@ -16,6 +16,7 @@
 
 package com.bobcat00.altdetector;
 
+import org.bstats.bukkit.Metrics;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class AltDetector extends JavaPlugin
@@ -45,6 +46,26 @@ public class AltDetector extends JavaPlugin
         dataStore.saveIpDataConfig();
          
         getLogger().info(entriesRemoved + " record" + (entriesRemoved == 1 ? "" : "s") + " removed, expiration time " + expirationTime + " days.");
+        
+        // Metrics
+        Metrics metrics = new Metrics(this);
+        if (metrics.isEnabled())
+        {
+            String option = "Invalid";
+            if (expirationTime == 0)
+                option = "0";
+            else if (expirationTime <= 30)
+                option = "1-30";
+            else if (expirationTime <= 60)
+                option = "31-60";
+            else if (expirationTime <= 90)
+                option = "61-90";
+            else if (expirationTime > 90)
+                option = ">90";
+            final String setting = option;
+            metrics.addCustomChart(new Metrics.SimplePie("expiration_time", () -> setting));
+            getLogger().info("Enabled metrics. You may opt-out by changing plugins/bStats/config.yml");
+        }
     }
     
     @Override
