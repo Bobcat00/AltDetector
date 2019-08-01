@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
@@ -129,43 +130,48 @@ public class DataStore
         int recordsPurged = 0;
         Date oldestDate = new Date(System.currentTimeMillis() - (plugin.expirationTime*24L*60L*60L*1000L));
         
-        // Loop through the IP keys
-        for (String ip : ipDataConfig.getConfigurationSection("ip").getKeys(false))
+        ConfigurationSection ipConfSect = getIpDataConfig().getConfigurationSection("ip");
+        if (ipConfSect != null)
         {
-            // Get list of UUID keys for this IP
-            Set<String> uuidKeys = ipDataConfig.getConfigurationSection("ip." + ip).getKeys(false);
-            int remainingKeys = uuidKeys.size();
-            
-            // Loop through the UUID keys
-            for (String uuid : uuidKeys)
+            // Loop through the IP keys
+            for (String ip : ipConfSect.getKeys(false))
             {
-                String uuidData = this.getIpDataConfig().getString("ip." + ip + "." + uuid);
-                String[] arg = uuidData.split(","); // arg[0]=date, arg[1]=name
-                Date date = new Date(Long.valueOf(arg[0]).longValue());
-                
-                // Check if entry expired
-                if (date.before(oldestDate))
+                // Get list of UUID keys for this IP
+                Set<String> uuidKeys = getIpDataConfig().getConfigurationSection("ip." + ip).getKeys(false);
+                int remainingKeys = uuidKeys.size();
+
+                // Loop through the UUID keys
+                for (String uuid : uuidKeys)
                 {
-                    // Add to removal list
-                    removeList.add("ip." + ip + "." + uuid);
-                    --remainingKeys;
-                    ++recordsPurged;
+                    String uuidData = getIpDataConfig().getString("ip." + ip + "." + uuid);
+                    String[] arg = uuidData.split(","); // arg[0]=date, arg[1]=name
+                    Date date = new Date(Long.valueOf(arg[0]).longValue());
+
+                    // Check if entry expired
+                    if (date.before(oldestDate))
+                    {
+                        // Add to removal list
+                        removeList.add("ip." + ip + "." + uuid);
+                        --remainingKeys;
+                        ++recordsPurged;
+                    }
+
+                } // end for each UUID key
+
+                // Check if the IP needs to be removed
+                if (remainingKeys <= 0)
+                {
+                    removeList.add("ip." + ip);
                 }
 
-            } // end for each UUID key
-            
-            // Check if the IP needs to be removed
-            if (remainingKeys <= 0)
-            {
-                removeList.add("ip." + ip);
-            }
+            } // end for each IP key
         
-        } // end for each IP key
+        } // end if confSect != null
         
         // Remove the keys from the file
         for (String key : removeList)
         {
-            this.getIpDataConfig().set(key, null);
+            getIpDataConfig().set(key, null);
         }
 
         return recordsPurged;
@@ -178,10 +184,10 @@ public class DataStore
     public void addUpdateIp(String ip, String uuid, String name)
     {
         Date date = new Date();
-        this.getIpDataConfig().set("ip." +
-                                   ip.replace('.', '_') + "." +
-                                   uuid,
-                                   date.getTime() + "," + name);
+        getIpDataConfig().set("ip." +
+                              ip.replace('.', '_') + "." +
+                              uuid,
+                              date.getTime() + "," + name);
     }
     
     // -------------------------------------------------------------------------
@@ -196,9 +202,9 @@ public class DataStore
         Date oldestDate = new Date(System.currentTimeMillis() - (plugin.expirationTime*24L*60L*60L*1000L));
         
         // Get the UUIDs for this IP address
-        for (String uuid : ipDataConfig.getConfigurationSection("ip." + ip.replace('.', '_')).getKeys(false))
+        for (String uuid : getIpDataConfig().getConfigurationSection("ip." + ip.replace('.', '_')).getKeys(false))
         {
-            String uuidData = this.getIpDataConfig().getString("ip." + ip.replace('.', '_') + "." + uuid);
+            String uuidData = getIpDataConfig().getString("ip." + ip.replace('.', '_') + "." + uuid);
             String[] arg = uuidData.split(","); // arg[0]=date, arg[1]=name
             Date date = new Date(Long.valueOf(arg[0]).longValue());
             
