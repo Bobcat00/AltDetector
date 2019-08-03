@@ -166,7 +166,7 @@ public class DataStore
 
             } // end for each IP key
         
-        } // end if confSect != null
+        } // end if ipConfSect != null
         
         // Remove the keys from the file
         for (String key : removeList)
@@ -201,20 +201,26 @@ public class DataStore
         
         Date oldestDate = new Date(System.currentTimeMillis() - (plugin.expirationTime*24L*60L*60L*1000L));
         
-        // Get the UUIDs for this IP address
-        for (String uuid : getIpDataConfig().getConfigurationSection("ip." + ip.replace('.', '_')).getKeys(false))
+        ConfigurationSection ipIpConfSect = getIpDataConfig().getConfigurationSection("ip." + ip.replace('.', '_'));
+        if (ipIpConfSect != null)
         {
-            String uuidData = getIpDataConfig().getString("ip." + ip.replace('.', '_') + "." + uuid);
-            String[] arg = uuidData.split(","); // arg[0]=date, arg[1]=name
-            Date date = new Date(Long.valueOf(arg[0]).longValue());
-            
-            // Check excluded UUID (if any) and expiration time
-            if (!uuid.equals(excludeUuid) && date.after(oldestDate))
+            // Get the UUIDs for this IP address
+            for (String uuid : ipIpConfSect.getKeys(false))
             {
-                // Add to list
-                altList.add(arg[1]);
-            }
-        }
+                String uuidData = getIpDataConfig().getString("ip." + ip.replace('.', '_') + "." + uuid);
+                String[] arg = uuidData.split(","); // arg[0]=date, arg[1]=name
+                Date date = new Date(Long.valueOf(arg[0]).longValue());
+
+                // Check excluded UUID (if any) and expiration time
+                if (!uuid.equals(excludeUuid) && date.after(oldestDate))
+                {
+                    // Add to list
+                    altList.add(arg[1]);
+                }
+            
+            } // end for each UUID
+        
+        } // end if ipIpConfSect != null
         
         Collections.sort(altList, String.CASE_INSENSITIVE_ORDER);
         
