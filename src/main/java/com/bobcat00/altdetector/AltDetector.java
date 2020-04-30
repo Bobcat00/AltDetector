@@ -77,7 +77,8 @@ public class AltDetector extends JavaPlugin
         
         // Metrics
         
-        Metrics metrics = new Metrics(this);
+        int pluginId = 4862;
+        Metrics metrics = new Metrics(this, pluginId);
         if (metrics.isEnabled())
         {
             String option = "Invalid";
