@@ -28,17 +28,16 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 
+import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 public class DataStore
 {
-    // hashmap: IP address, array of (date, UUID)
-    // or
-    // key_IP: array of (date, UUID)
-    
     private AltDetector plugin;
+    
+    private boolean saveData = false;
     
     private File ipDataFile = null; // The file on the disk
     private FileConfiguration ipDataConfig = null; // The contents of the configuration
@@ -48,6 +47,22 @@ public class DataStore
     public DataStore(AltDetector plugin)
     {
         this.plugin = plugin;
+        
+        // Periodic task to save data
+        if (plugin.saveInterval > 0)
+        {
+            Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
+                @Override
+                public void run()
+                {
+                    if (saveData)
+                    {
+                        saveIpDataConfig();
+                    }
+                }
+            }, plugin.saveInterval * 60L * 20L,  // delay
+               plugin.saveInterval * 60L * 20L); // period
+        }
     }
     
     // -------------------------------------------------------------------------
@@ -99,6 +114,7 @@ public class DataStore
         try
         {
             getIpDataConfig().save(ipDataFile);
+            saveData = false;
         }
         catch (IOException ex)
         {
@@ -188,6 +204,7 @@ public class DataStore
                               ip.replace('.', '_') + "." +
                               uuid,
                               date.getTime() + "," + name);
+        saveData = true;
     }
     
     // -------------------------------------------------------------------------

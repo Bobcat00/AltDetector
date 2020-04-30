@@ -1,2 +1,3 @@
-# Data expiration time in days
+# Data expiration time in days; Save interval in minutes (0 for immediate)
 expirationtime: 60
+saveinterval: 1

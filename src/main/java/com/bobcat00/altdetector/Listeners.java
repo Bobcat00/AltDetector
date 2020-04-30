@@ -44,9 +44,12 @@ public class Listeners implements Listener
         String uuid = player.getUniqueId().toString();
         String name = player.getName();
         
-        // Add to the database first and save it
+        // Add to the database
         plugin.dataStore.addUpdateIp(ip, uuid, name);
-        plugin.dataStore.saveIpDataConfig();
+        if (plugin.saveInterval == 0)
+        {
+            plugin.dataStore.saveIpDataConfig();
+        }
         
         // Get list of UUIDs/names/dates for this IP address
         List<String> altList = plugin.dataStore.getAltNames(ip, uuid);

@@ -22,6 +22,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 public class AltDetector extends JavaPlugin
 {
     long expirationTime = 60;
+    long saveInterval = 1;
     Config config;
     DataStore dataStore;
     Listeners listeners;
@@ -29,25 +30,53 @@ public class AltDetector extends JavaPlugin
     @Override
     public void onEnable()
     {
-        config = new Config(this);
-        dataStore = new DataStore(this);
-        listeners = new Listeners(this);
+        // Config
         
-        this.getCommand("alt").setExecutor(new Commands(this));
+        config = new Config(this);
         
         saveDefaultConfig();
+        // Update old config file
+        if (!getConfig().contains("saveinterval", true))
+        {
+            getConfig().set("saveinterval", 1L);
+        }
+        getConfig().options().header(" Data expiration time in days; Save interval in minutes (0 for immediate)");
+        saveConfig();
+        
+        expirationTime = config.getExpirationTime();
+        saveInterval = config.getSaveInterval();
+        if (saveInterval > 0)
+        {
+            getLogger().info("Database save interval " + saveInterval + " minute" + (saveInterval == 1 ? "." : "s."));
+        }
+        else
+        {
+            saveInterval = 0;
+            getLogger().info("Saving to database as each player connects.");
+        }
+        
+        // DataStore
+        
+        dataStore = new DataStore(this);
         
         dataStore.saveDefaultConfig();
         dataStore.reloadIpDataConfig();
         
-        expirationTime = config.getExpirationTime();
-        
         int entriesRemoved = dataStore.purge();
         dataStore.saveIpDataConfig();
-         
+        
         getLogger().info(entriesRemoved + " record" + (entriesRemoved == 1 ? "" : "s") + " removed, expiration time " + expirationTime + " days.");
         
+        // Listeners
+        
+        listeners = new Listeners(this);
+        
+        // Commands
+        
+        this.getCommand("alt").setExecutor(new Commands(this));
+        
         // Metrics
+        
         Metrics metrics = new Metrics(this);
         if (metrics.isEnabled())
         {
@@ -64,6 +93,19 @@ public class AltDetector extends JavaPlugin
                 option = ">90";
             final String setting = option;
             metrics.addCustomChart(new Metrics.SimplePie("expiration_time", () -> setting));
+            
+            option = "Invalid";
+            if (saveInterval == 0)
+                option = "0";
+            else if (saveInterval <= 5)
+                option = "1-5";
+            else if (saveInterval <= 10)
+                option = "6-10";
+            else if (saveInterval > 10)
+                option = ">10";
+            final String setting2 = option;
+            metrics.addCustomChart(new Metrics.SimplePie("save_interval", () -> setting2));
+            
             getLogger().info("Enabled metrics. You may opt-out by changing plugins/bStats/config.yml");
         }
     }
@@ -71,7 +113,10 @@ public class AltDetector extends JavaPlugin
     @Override
     public void onDisable()
     {
-        //
+        if (saveInterval > 0)
+        {
+            dataStore.saveIpDataConfig();
+        }
     }
 
 }

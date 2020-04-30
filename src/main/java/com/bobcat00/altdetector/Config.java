@@ -29,5 +29,10 @@ public class Config
     {
         return plugin.getConfig().getLong("expirationtime");
     }
+    
+    public long getSaveInterval()
+    {
+        return plugin.getConfig().getLong("saveinterval");
+    }
 
 }
