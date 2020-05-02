@@ -27,6 +27,8 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import com.bobcat00.altdetector.DataStore.PlayerDataType;
+
 public class Commands implements CommandExecutor
 {
     private AltDetector plugin;
@@ -66,7 +68,7 @@ public class Commands implements CommandExecutor
                 // Make sure the player is online
                 if (player == null)
                 {
-                    sender.sendMessage(ChatColor.DARK_RED + args[0] + " is not currently online");
+                    handleOfflinePlayer(sender, args[0]);
                     return true;
                 }
                 playerList.add(player.getName());
@@ -88,19 +90,7 @@ public class Commands implements CommandExecutor
                 String ip = player.getAddress().getAddress().getHostAddress();
                 String uuid = player.getUniqueId().toString();
                 
-                // Get possible alts
-                List<String> altList = plugin.dataStore.getAltNames(ip, uuid);
-                
-                if (!altList.isEmpty())
-                {
-                    StringBuilder sb = new StringBuilder(ChatColor.RED + name + ChatColor.GOLD + " may be an alt of ");
-                    for (String altName : altList)
-                    {
-                        sb.append(ChatColor.RED + altName + ChatColor.GOLD + ", ");
-                    }
-                    sender.sendMessage(sb.toString().substring(0, sb.length()-4)); // Account for ChatColor
-                    altsFound = true;
-                }
+                altsFound |= outputAlts(sender, name, ip, uuid);
                 
             } // end for each name
             
@@ -123,4 +113,48 @@ public class Commands implements CommandExecutor
         return false;
     }
     
+    // -------------------------------------------------------------------------
+    
+    private void handleOfflinePlayer(CommandSender sender, String playerName)
+    {
+        // Lookup player; return is IP address, UUID, and name (may be null)
+        PlayerDataType playerData = plugin.dataStore.lookupOfflinePlayer(playerName);
+        
+        if (playerData == null)
+        {
+            sender.sendMessage(ChatColor.DARK_RED + playerName + " not found");
+        }
+        else
+        {
+            boolean altsFound = outputAlts(sender, playerData.name, playerData.ip, playerData.uuid);
+            
+            if (!altsFound)
+            {
+                sender.sendMessage(ChatColor.RED + playerData.name + ChatColor.GOLD + " has no known alts");
+            }
+        }
+    }
+    
+    // -------------------------------------------------------------------------
+    
+    private boolean outputAlts(CommandSender sender, String name, String ip, String uuid)
+    {
+        boolean altsFound = false;
+        
+        // Get possible alts
+        List<String> altList = plugin.dataStore.getAltNames(ip, uuid);
+        
+        if (!altList.isEmpty())
+        {
+            StringBuilder sb = new StringBuilder(ChatColor.RED + name + ChatColor.GOLD + " may be an alt of ");
+            for (String altName : altList)
+            {
+                sb.append(ChatColor.RED + altName + ChatColor.GOLD + ", ");
+            }
+            sender.sendMessage(sb.toString().substring(0, sb.length()-4)); // Account for ChatColor
+            altsFound = true;
+        }
+        
+        return altsFound;
+    }
 }

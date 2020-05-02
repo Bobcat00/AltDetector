@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 
@@ -243,5 +244,64 @@ public class DataStore
         
         return altList;
     }
-
+    
+    // -------------------------------------------------------------------------
+    
+    // Class to allow lookupOfflinePlayer to return three values.
+    
+    public class PlayerDataType
+    {
+        String ip;
+        String uuid;
+        String name;
+    }
+    
+    // -------------------------------------------------------------------------
+    
+    // Take a playerName and look up the most recent IP address, UUID, and name.
+    
+    public PlayerDataType lookupOfflinePlayer(String playerName)
+    {
+        // Return values
+        PlayerDataType playerData = null;
+        
+        Date newestDate = new Date(0L);
+        
+        ConfigurationSection ipConfSect = getIpDataConfig().getConfigurationSection("ip.");
+        Map<String,Object> confMap = ipConfSect.getValues(true);
+        
+        // Go through all the keys which contain player data
+        for (Map.Entry<String,Object> entry: confMap.entrySet())
+        {
+            if (entry.getValue() instanceof String)
+            {
+                // Split key into IP address and UUID
+                String[] key = entry.getKey().split("\\.");
+                String ip   = key[0];
+                String uuid = key[1];
+                
+                // Split value into timestamp and player name
+                String[] value = ((String)entry.getValue()).split(",");
+                String timestamp = value[0];
+                String name      = value[1];
+                
+                // Check if it's for the desired player name
+                if (playerName.equalsIgnoreCase(name))
+                {
+                    Date date = new Date(Long.valueOf(timestamp).longValue());
+                    if (date.after(newestDate))
+                    {
+                        playerData = new PlayerDataType();
+                        playerData.ip   = ip.replace('_','.');
+                        playerData.uuid = uuid;
+                        playerData.name = name;
+                        
+                        newestDate = date;
+                    }
+                }
+            }
+        }
+        
+        return playerData;
+    }
 }
