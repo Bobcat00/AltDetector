@@ -56,7 +56,10 @@ public class Commands implements CommandExecutor
                 // Get a list of all the players
                 for (Player player : plugin.getServer().getOnlinePlayers())
                 {
-                    playerList.add(player.getName());
+                    if (!player.hasPermission("altdetector.exempt"))
+                    {
+                        playerList.add(player.getName());
+                    }
                 }
                 Collections.sort(playerList, String.CASE_INSENSITIVE_ORDER);
             }
@@ -71,7 +74,10 @@ public class Commands implements CommandExecutor
                     handleOfflinePlayer(sender, args[0]);
                     return true;
                 }
-                playerList.add(player.getName());
+                if (!player.hasPermission("altdetector.exempt"))
+                {
+                    playerList.add(player.getName());
+                }
             }
             else
             {
