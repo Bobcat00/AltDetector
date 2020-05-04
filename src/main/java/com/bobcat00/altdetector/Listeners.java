@@ -38,8 +38,15 @@ public class Listeners implements Listener
     @EventHandler(priority = EventPriority.HIGH)
     public void onPlayerJoin(PlayerJoinEvent event)
     {
-        // Get info about this player
         Player player = event.getPlayer();
+        
+        // Skip if player is exempt
+        if (player.hasPermission("altdetector.exempt"))
+        {
+            return;
+        }
+        
+        // Get info about this player
         String ip = player.getAddress().getAddress().getHostAddress();
         String uuid = player.getUniqueId().toString();
         String name = player.getName();
