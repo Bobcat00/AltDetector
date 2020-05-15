@@ -82,7 +82,9 @@ public class AltDetector extends JavaPlugin
         if (metrics.isEnabled())
         {
             String option = "Invalid";
-            if (expirationTime == 0)
+            if (expirationTime < 0)
+                option = "Invalid";
+            else if (expirationTime == 0)
                 option = "0";
             else if (expirationTime <= 30)
                 option = "1-30";
@@ -96,7 +98,9 @@ public class AltDetector extends JavaPlugin
             metrics.addCustomChart(new Metrics.SimplePie("expiration_time", () -> setting));
             
             option = "Invalid";
-            if (saveInterval == 0)
+            if (saveInterval < 0)
+                option = "Invalid";
+            else if (saveInterval == 0)
                 option = "0";
             else if (saveInterval <= 5)
                 option = "1-5";
