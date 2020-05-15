@@ -265,6 +265,7 @@ public class DataStore
         // Return values
         PlayerDataType playerData = null;
         
+        Date oldestDate = new Date(System.currentTimeMillis() - (plugin.expirationTime*24L*60L*60L*1000L));
         Date newestDate = new Date(0L);
         
         ConfigurationSection ipConfSect = getIpDataConfig().getConfigurationSection("ip.");
@@ -289,7 +290,7 @@ public class DataStore
                 if (playerName.equalsIgnoreCase(name))
                 {
                     Date date = new Date(Long.valueOf(timestamp).longValue());
-                    if (date.after(newestDate))
+                    if (date.after(oldestDate) && date.after(newestDate))
                     {
                         playerData = new PlayerDataType();
                         playerData.ip   = ip.replace('_','.');
