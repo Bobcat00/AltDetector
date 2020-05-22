@@ -36,12 +36,7 @@ public class AltDetector extends JavaPlugin
         
         saveDefaultConfig();
         // Update old config file
-        if (!getConfig().contains("saveinterval", true))
-        {
-            getConfig().set("saveinterval", 1L);
-        }
-        getConfig().options().header(" Data expiration time in days; Save interval in minutes (0 for immediate)");
-        saveConfig();
+        config.updateConfig();
         
         expirationTime = config.getExpirationTime();
         saveInterval = config.getSaveInterval();

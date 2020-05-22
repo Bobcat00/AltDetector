@@ -1,3 +1,22 @@
-# Data expiration time in days; Save interval in minutes (0 for immediate)
-expirationtime: 60
-saveinterval: 1
+# Data expiration time in days
+expiration-time: 60
+
+# Save interval in minutes (0 for immediate)
+save-interval: 1
+
+# Messages when player joins the server
+join-player-prefix: "&b[AltDetector] "
+join-player: "{0} may be an alt of "
+join-player-list: "{0}"
+join-player-separator: ", "
+
+# Messages for alt command
+altcmd-player: "&c{0}&6 may be an alt of "
+altcmd-player-list: "&c{0}"
+altcmd-player-separator: "&6, "
+
+altcmd-playernoalts: "&c{0}&6 has no known alts"
+altcmd-noalts: "&6No alts found"
+altcmd-playernotfound: "&4{0} not found"
+altcmd-paramerror: "&4Must specify at most one player"
+altcmd-noperm: "&4You do not have permission for this command" 

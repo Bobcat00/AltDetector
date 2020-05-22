@@ -16,6 +16,10 @@
 
 package com.bobcat00.altdetector;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+
 public class Config
 {
     private AltDetector plugin;
@@ -27,12 +31,217 @@ public class Config
     
     public long getExpirationTime()
     {
-        return plugin.getConfig().getLong("expirationtime");
+        return plugin.getConfig().getLong("expiration-time");
     }
     
     public long getSaveInterval()
     {
-        return plugin.getConfig().getLong("saveinterval");
+        return plugin.getConfig().getLong("save-interval");
+    }
+    
+    public String getJoinPlayerPrefix()
+    {
+        return plugin.getConfig().getString("join-player-prefix");
+    }
+    
+    public String getJoinPlayer()
+    {
+        return plugin.getConfig().getString("join-player");
+    }
+    
+    public String getJoinPlayerList()
+    {
+        return plugin.getConfig().getString("join-player-list");
+    }
+    
+    public String getJoinPlayerSeparator()
+    {
+        return plugin.getConfig().getString("join-player-separator");
+    }
+    
+    public String getAltCmdPlayer()
+    {
+        return plugin.getConfig().getString("altcmd-player");
+    }
+    
+    public String getAltCmdPlayerList()
+    {
+        return plugin.getConfig().getString("altcmd-player-list");
+    }
+    
+    public String getAltCmdPlayerSeparator()
+    {
+        return plugin.getConfig().getString("altcmd-player-separator");
+    }
+    
+    public String getAltCmdPlayerNoAlts()
+    {
+        return plugin.getConfig().getString("altcmd-playernoalts");
+    }
+    
+    public String getAltCmdNoAlts()
+    {
+        return plugin.getConfig().getString("altcmd-noalts");
+    }
+    
+    public String getAltCmdPlayerNotFound()
+    {
+        return plugin.getConfig().getString("altcmd-playernotfound");
+    }
+    
+    public String getAltCmdParamError()
+    {
+        return plugin.getConfig().getString("altcmd-paramerror");
+    }
+    
+    public String getAltCmdNoPerm()
+    {
+        return plugin.getConfig().getString("altcmd-noperm");
+    }
+    
+    //--------------------------------------------------------------------------
+    
+    // Update the config file with new fields.
+    
+    public void updateConfig()
+    {
+        if (!plugin.getConfig().contains("expiration-time", true))
+        {
+            if (plugin.getConfig().contains("expirationtime", true))
+            {
+                plugin.getConfig().set("expiration-time", plugin.getConfig().getLong("expirationtime"));
+            }
+            else
+            {
+                plugin.getConfig().set("expiration-time", 60L);
+            }
+        }
+        
+        if (!plugin.getConfig().contains("save-interval", true))
+        {
+            if (plugin.getConfig().contains("saveinterval", true))
+            {
+                plugin.getConfig().set("save-interval", plugin.getConfig().getLong("saveinterval"));
+            }
+            else
+            {
+                plugin.getConfig().set("save-interval", 1L);
+            }
+        }
+        
+        if (!plugin.getConfig().contains("join-player-prefix", true))
+        {
+            plugin.getConfig().set("join-player-prefix", "&b[AltDetector] ");
+        }
+        
+        if (!plugin.getConfig().contains("join-player", true))
+        {
+            plugin.getConfig().set("join-player", "{0} may be an alt of ");
+        }
+        
+        if (!plugin.getConfig().contains("join-player-list", true))
+        {
+            plugin.getConfig().set("join-player-list", "{0}");
+        }
+        
+        if (!plugin.getConfig().contains("join-player-separator", true))
+        {
+            plugin.getConfig().set("join-player-separator", ", ");
+        }
+        
+        if (!plugin.getConfig().contains("altcmd-player", true))
+        {
+            plugin.getConfig().set("altcmd-player", "&c{0}&6 may be an alt of ");
+        }
+        
+        if (!plugin.getConfig().contains("altcmd-player-list", true))
+        {
+            plugin.getConfig().set("altcmd-player-list", "&c{0}");
+        }
+        
+        if (!plugin.getConfig().contains("altcmd-player-separator", true))
+        {
+            plugin.getConfig().set("altcmd-player-separator", "&6, ");
+        }
+        
+        if (!plugin.getConfig().contains("altcmd-playernoalts", true))
+        {
+            plugin.getConfig().set("altcmd-playernoalts", "&c{0}&6 has no known alts");
+        }
+        
+        if (!plugin.getConfig().contains("altcmd-noalts", true))
+        {
+            plugin.getConfig().set("altcmd-noalts", "&6No alts found");
+        }
+        
+        if (!plugin.getConfig().contains("altcmd-playernotfound", true))
+        {
+            plugin.getConfig().set("altcmd-playernotfound", "&4{0} not found");
+        }
+        
+        if (!plugin.getConfig().contains("altcmd-paramerror", true))
+        {
+            plugin.getConfig().set("altcmd-paramerror", "&4Must specify at most one player");
+        }
+        
+        if (!plugin.getConfig().contains("altcmd-noperm", true))
+        {
+            plugin.getConfig().set("altcmd-noperm", "&4You do not have permission for this command");
+        }
+        
+        saveConfig();
+    }
+    
+    //--------------------------------------------------------------------------
+    
+    // Save config to disk with embedded comments. Any change to the config file
+    // format must also be changed here. Newlines are written as \n so they will
+    // be the same on all platforms.
+    
+    public void saveConfig()
+    {
+        try
+        {
+            File outFile = new File(plugin.getDataFolder(), "config.yml");
+            
+            BufferedWriter writer = new BufferedWriter(new FileWriter(outFile.getAbsolutePath()));
+            
+            writer.write("# Data expiration time in days"                                    + "\n");
+            writer.write("expiration-time: " + plugin.getConfig().getLong("expiration-time") + "\n");
+            writer.write("\n");
+            
+            writer.write("# Save interval in minutes (0 for immediate)"                      + "\n");
+            writer.write("save-interval: "   + plugin.getConfig().getLong("save-interval")   + "\n");
+            writer.write("\n");
+            
+            writer.write("# Messages when player joins the server"                                                                                + "\n");
+            writer.write("join-player-prefix: \""      + plugin.getConfig().getString("join-player-prefix").replaceAll("\n", "\\\\n")      + "\"" + "\n");
+            writer.write("join-player: \""             + plugin.getConfig().getString("join-player").replaceAll("\n", "\\\\n")             + "\"" + "\n");
+            writer.write("join-player-list: \""        + plugin.getConfig().getString("join-player-list").replaceAll("\n", "\\\\n")        + "\"" + "\n");
+            writer.write("join-player-separator: \""   + plugin.getConfig().getString("join-player-separator").replaceAll("\n", "\\\\n")   + "\"" + "\n");
+            writer.write("\n");
+
+            writer.write("# Messages for alt command"                                                                                             + "\n");
+            writer.write("altcmd-player: \""           + plugin.getConfig().getString("altcmd-player").replaceAll("\n", "\\\\n")           + "\"" + "\n");
+            writer.write("altcmd-player-list: \""      + plugin.getConfig().getString("altcmd-player-list").replaceAll("\n", "\\\\n")      + "\"" + "\n");
+            writer.write("altcmd-player-separator: \"" + plugin.getConfig().getString("altcmd-player-separator").replaceAll("\n", "\\\\n") + "\"" + "\n");
+            writer.write("\n");
+            
+            writer.write("altcmd-playernoalts: \""     + plugin.getConfig().getString("altcmd-playernoalts").replaceAll("\n", "\\\\n")     + "\"" + "\n");
+            writer.write("altcmd-noalts: \""           + plugin.getConfig().getString("altcmd-noalts").replaceAll("\n", "\\\\n")           + "\"" + "\n");
+            writer.write("altcmd-playernotfound: \""   + plugin.getConfig().getString("altcmd-playernotfound").replaceAll("\n", "\\\\n")   + "\"" + "\n");
+            writer.write("altcmd-paramerror: \""       + plugin.getConfig().getString("altcmd-paramerror").replaceAll("\n", "\\\\n")       + "\"" + "\n");
+            writer.write("altcmd-noperm: \""           + plugin.getConfig().getString("altcmd-noperm").replaceAll("\n", "\\\\n")           + "\"" + "\n");
+            
+            writer.close();
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+            //plugin.getLogger().info("Exception creating config file.");
+        }
+        
+        plugin.reloadConfig();
     }
 
 }

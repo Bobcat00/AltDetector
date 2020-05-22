@@ -16,6 +16,7 @@
 
 package com.bobcat00.altdetector;
 
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -45,7 +46,8 @@ public class Commands implements CommandExecutor
         {
             if (sender instanceof Player && !sender.hasPermission("altdetector.alt"))
             {
-                sender.sendMessage("You do not have permission for this command");
+                // You do not have permission for this command
+                sender.sendMessage(ChatColor.translateAlternateColorCodes('&', plugin.config.getAltCmdNoPerm()));
                 return true;
             }
             
@@ -81,7 +83,8 @@ public class Commands implements CommandExecutor
             }
             else
             {
-                sender.sendMessage(ChatColor.DARK_RED + "Must specify at most one player");
+                // Must specify at most one player
+                sender.sendMessage(ChatColor.translateAlternateColorCodes('&', plugin.config.getAltCmdParamError()));
                 return true;
             }
             
@@ -104,11 +107,13 @@ public class Commands implements CommandExecutor
             {
                 if (args.length == 0)
                 {
-                    sender.sendMessage(ChatColor.GOLD + "No alts found");
+                    // No alts found
+                    sender.sendMessage(ChatColor.translateAlternateColorCodes('&', plugin.config.getAltCmdNoAlts()));
                 }
                 else
                 {
-                    sender.sendMessage(ChatColor.RED + args[0] + ChatColor.GOLD + " has no known alts");
+                    // args[0] has no known alts
+                    sender.sendMessage(ChatColor.translateAlternateColorCodes('&', MessageFormat.format(plugin.config.getAltCmdPlayerNoAlts(), args[0])));
                 }
             }
             
@@ -121,6 +126,8 @@ public class Commands implements CommandExecutor
     
     // -------------------------------------------------------------------------
     
+    // Lookup an offline player and report any alts found.
+    
     private void handleOfflinePlayer(CommandSender sender, String playerName)
     {
         // Lookup player; return is IP address, UUID, and name (may be null)
@@ -128,7 +135,8 @@ public class Commands implements CommandExecutor
         
         if (playerData == null)
         {
-            sender.sendMessage(ChatColor.DARK_RED + playerName + " not found");
+            // playerName not found
+            sender.sendMessage(ChatColor.translateAlternateColorCodes('&', MessageFormat.format(plugin.config.getAltCmdPlayerNotFound(), playerName)));
         }
         else
         {
@@ -136,31 +144,33 @@ public class Commands implements CommandExecutor
             
             if (!altsFound)
             {
-                sender.sendMessage(ChatColor.RED + playerData.name + ChatColor.GOLD + " has no known alts");
+                // playerData.name has no known alts
+                sender.sendMessage(ChatColor.translateAlternateColorCodes('&', MessageFormat.format(plugin.config.getAltCmdPlayerNoAlts(), playerData.name)));
             }
         }
     }
     
     // -------------------------------------------------------------------------
     
+    // Output the alts for the given player, if any. Returns true if alts were
+    // found. This is used for both online and offline players.
+    
     private boolean outputAlts(CommandSender sender, String name, String ip, String uuid)
     {
-        boolean altsFound = false;
-        
         // Get possible alts
-        List<String> altList = plugin.dataStore.getAltNames(ip, uuid);
+        String altString = plugin.dataStore.getFormattedAltString(name,
+                                                                  ip,
+                                                                  uuid,
+                                                                  plugin.config.getAltCmdPlayer(),
+                                                                  plugin.config.getAltCmdPlayerList(),
+                                                                  plugin.config.getAltCmdPlayerSeparator());
         
-        if (!altList.isEmpty())
+        if (altString != null)
         {
-            StringBuilder sb = new StringBuilder(ChatColor.RED + name + ChatColor.GOLD + " may be an alt of ");
-            for (String altName : altList)
-            {
-                sb.append(ChatColor.RED + altName + ChatColor.GOLD + ", ");
-            }
-            sender.sendMessage(sb.toString().substring(0, sb.length()-4)); // Account for ChatColor
-            altsFound = true;
+            sender.sendMessage(ChatColor.translateAlternateColorCodes('&', altString));
+            return true;
         }
         
-        return altsFound;
+        return false;
     }
 }

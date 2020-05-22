@@ -16,8 +16,6 @@
 
 package com.bobcat00.altdetector;
 
-import java.util.List;
-
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -58,23 +56,27 @@ public class Listeners implements Listener
             plugin.dataStore.saveIpDataConfig();
         }
         
-        // Get list of UUIDs/names/dates for this IP address
-        List<String> altList = plugin.dataStore.getAltNames(ip, uuid);
+        // Get possible alts
+        String altString = plugin.dataStore.getFormattedAltString(name,
+                                                                  ip,
+                                                                  uuid,
+                                                                  plugin.config.getJoinPlayer(),
+                                                                  plugin.config.getJoinPlayerList(),
+                                                                  plugin.config.getJoinPlayerSeparator());
         
-        if (!altList.isEmpty())
+        if (altString != null)
         {
-            StringBuilder sb = new StringBuilder(name + " may be an alt of ");
-            for (String altName : altList)
-            {
-                sb.append(altName).append(", ");
-            }
-            plugin.getLogger().info(sb.toString().substring(0, sb.length()-2));
+            // Output to log file without color codes
+            plugin.getLogger().info(altString.replaceAll("&[0123456789AaBbCcDdEeFfKkLlMmNnOoRr]", ""));
+            
+            // Output including prefix to players with altdetector.notify
+            String notifyString = ChatColor.translateAlternateColorCodes('&', plugin.config.getJoinPlayerPrefix() + altString);
             
             for (Player p : plugin.getServer().getOnlinePlayers())
             {
                 if (p.hasPermission("altdetector.notify"))
                 {
-                    p.sendMessage(ChatColor.AQUA + "[AltDetector] " + sb.toString().substring(0, sb.length()-2));
+                    p.sendMessage(notifyString);
                 }
             }
 
