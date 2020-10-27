@@ -25,6 +25,7 @@ import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -40,6 +41,11 @@ public class DataStore
     private AltDetector plugin;
     
     private boolean saveData = false;
+    
+    // Contains all the player names in the data file.  This is intended for use with the
+    // tab complete capability.  Mojang's Brigadier acts weird with mixed-case names, so
+    // the names here will be all lower case.
+    private Set<String> playerList = new HashSet<>();
     
     private File ipDataFile = null; // The file on the disk
     private FileConfiguration ipDataConfig = null; // The contents of the configuration
@@ -139,10 +145,53 @@ public class DataStore
     
     // -------------------------------------------------------------------------
     
-    // This method purges all entries older than the expiration time.  It
-    // returns a count of the number purged.
+    // Generates playerList 
     
-    public int purge()
+    public void generatePlayerList()
+    {
+        playerList.clear();
+        
+        ConfigurationSection ipConfSect = getIpDataConfig().getConfigurationSection("ip");
+        if (ipConfSect != null)
+        {
+            // Loop through the IP keys
+            for (String ip : ipConfSect.getKeys(false))
+            {
+                // Get list of UUID keys for this IP
+                Set<String> uuidKeys = getIpDataConfig().getConfigurationSection("ip." + ip).getKeys(false);
+                
+                // Loop through the UUID keys
+                for (String uuid : uuidKeys)
+                {
+                    String uuidData = getIpDataConfig().getString("ip." + ip + "." + uuid);
+                    String[] arg = uuidData.split(","); // arg[0]=date, arg[1]=name
+                    playerList.add(arg[1].toLowerCase());
+                }
+            
+            } // end for each IP key
+        
+        } // end if ipConfSect != null
+        
+        return;
+    }
+    
+    // -------------------------------------------------------------------------
+    
+    public List<String> getPlayerList()
+    {
+        List<String> pl = new ArrayList<>(playerList);
+        pl.sort(null);
+        return pl;
+    }
+    
+    // -------------------------------------------------------------------------
+    
+    // This method purges all entries for the specified player name
+    // OR
+    // all entries older than the expiration time (if the name is "").
+    // It returns a count of the number purged.
+    
+    public int purge(String name)
     {
         List<String> removeList = new ArrayList<String>();
         int recordsPurged = 0;
@@ -165,13 +214,16 @@ public class DataStore
                     String[] arg = uuidData.split(","); // arg[0]=date, arg[1]=name
                     Date date = new Date(Long.valueOf(arg[0]).longValue());
 
-                    // Check if entry expired
-                    if (date.before(oldestDate))
+                    // Check if entry should be purged
+                    if ((name.equals("") && date.before(oldestDate)) || 
+                        (name.equalsIgnoreCase(arg[1])))
                     {
                         // Add to removal list
                         removeList.add("ip." + ip + "." + uuid);
                         --remainingKeys;
                         ++recordsPurged;
+                        // Remove from playerList
+                        playerList.remove(arg[1].toLowerCase());
                     }
 
                 } // end for each UUID key
@@ -191,7 +243,12 @@ public class DataStore
         {
             getIpDataConfig().set(key, null);
         }
-
+        
+        if (recordsPurged > 0)
+        {
+            saveData = true;
+        }
+        
         return recordsPurged;
     }
     
@@ -206,6 +263,7 @@ public class DataStore
                               ip.replace('.', '_') + "." +
                               uuid,
                               date.getTime() + "," + name);
+        playerList.add(name.toLowerCase());
         saveData = true;
     }
     

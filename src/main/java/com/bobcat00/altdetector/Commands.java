@@ -53,8 +53,10 @@ public class Commands implements CommandExecutor
             
             List<String> playerList = new ArrayList<String>();
             
-            if (args.length == 0)
+            switch (args.length)
             {
+            case 0:
+                
                 // Get a list of all the players
                 for (Player player : plugin.getServer().getOnlinePlayers())
                 {
@@ -64,9 +66,10 @@ public class Commands implements CommandExecutor
                     }
                 }
                 Collections.sort(playerList, String.CASE_INSENSITIVE_ORDER);
-            }
-            else if (args.length == 1)
-            {
+                break;
+
+            case 1:
+                
                 // Get the player
                 @SuppressWarnings("deprecation")
                 Player player = Bukkit.getServer().getPlayerExact(args[0]);
@@ -80,9 +83,50 @@ public class Commands implements CommandExecutor
                 {
                     playerList.add(player.getName());
                 }
-            }
-            else
-            {
+                break;
+            
+            case 2:
+                
+                // Delete player's records
+                if (args[0].equalsIgnoreCase("delete"))
+                {
+                    if (sender instanceof Player && !sender.hasPermission("altdetector.alt.delete"))
+                    {
+                        // You do not have permission for this command
+                        sender.sendMessage(ChatColor.translateAlternateColorCodes('&', plugin.config.getAltCmdNoPerm()));
+                        return true;
+                    }
+                    else
+                    {
+                        int entriesRemoved = plugin.dataStore.purge(args[1]);
+                        
+                        if (entriesRemoved == 0)
+                        {
+                            // playerName not found
+                            sender.sendMessage(ChatColor.translateAlternateColorCodes('&', MessageFormat.format(plugin.config.getAltCmdPlayerNotFound(), args[1])));
+                        }
+                        else if (entriesRemoved == 1)
+                        {
+                            // 1 record removed
+                            sender.sendMessage(ChatColor.translateAlternateColorCodes('&', MessageFormat.format(plugin.config.getDelCmdRemovedSingular(), entriesRemoved)));
+                        }
+                        else
+                        {
+                            // n records removed
+                            sender.sendMessage(ChatColor.translateAlternateColorCodes('&', MessageFormat.format(plugin.config.getDelCmdRemovedPlural(), entriesRemoved)));
+                        }
+                    }
+                }
+                else
+                {
+                    // Must specify at most one player
+                    sender.sendMessage(ChatColor.translateAlternateColorCodes('&', plugin.config.getAltCmdParamError()));
+                }
+                
+                return true;
+                
+            default:
+                
                 // Must specify at most one player
                 sender.sendMessage(ChatColor.translateAlternateColorCodes('&', plugin.config.getAltCmdParamError()));
                 return true;

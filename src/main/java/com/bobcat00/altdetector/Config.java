@@ -99,6 +99,16 @@ public class Config
         return plugin.getConfig().getString("altcmd-noperm");
     }
     
+    public String getDelCmdRemovedSingular()
+    {
+        return plugin.getConfig().getString("delcmd-removedsingular");
+    }
+    
+    public String getDelCmdRemovedPlural()
+    {
+        return plugin.getConfig().getString("delcmd-removedplural");
+    }
+    
     //--------------------------------------------------------------------------
     
     // Update the config file with new fields.
@@ -189,6 +199,16 @@ public class Config
             plugin.getConfig().set("altcmd-noperm", "&4You do not have permission for this command");
         }
         
+        if (!plugin.getConfig().contains("delcmd-removedsingular", true))
+        {
+            plugin.getConfig().set("delcmd-removedsingular", "&6{0} record removed");
+        }
+        
+        if (!plugin.getConfig().contains("delcmd-removedplural", true))
+        {
+            plugin.getConfig().set("delcmd-removedplural", "&6{0} records removed");
+        }
+        
         saveConfig();
     }
     
@@ -232,6 +252,11 @@ public class Config
             writer.write("altcmd-playernotfound: \""   + plugin.getConfig().getString("altcmd-playernotfound").replaceAll("\n", "\\\\n")   + "\"" + "\n");
             writer.write("altcmd-paramerror: \""       + plugin.getConfig().getString("altcmd-paramerror").replaceAll("\n", "\\\\n")       + "\"" + "\n");
             writer.write("altcmd-noperm: \""           + plugin.getConfig().getString("altcmd-noperm").replaceAll("\n", "\\\\n")           + "\"" + "\n");
+            writer.write("\n");
+            
+            writer.write("#Messages for alt delete command"                                                                                       + "\n");
+            writer.write("delcmd-removedsingular: \""  + plugin.getConfig().getString("delcmd-removedsingular").replaceAll("\n", "\\\\n")  + "\"" + "\n");
+            writer.write("delcmd-removedplural: \""    + plugin.getConfig().getString("delcmd-removedplural").replaceAll("\n", "\\\\n")    + "\"" + "\n");
             
             writer.close();
         }

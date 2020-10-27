@@ -57,8 +57,9 @@ public class AltDetector extends JavaPlugin
         dataStore.saveDefaultConfig();
         dataStore.reloadIpDataConfig();
         
-        int entriesRemoved = dataStore.purge();
+        int entriesRemoved = dataStore.purge(""); // purged based on date
         dataStore.saveIpDataConfig();
+        dataStore.generatePlayerList();
         
         getLogger().info(entriesRemoved + " record" + (entriesRemoved == 1 ? "" : "s") + " removed, expiration time " + expirationTime + " days.");
         
@@ -69,6 +70,7 @@ public class AltDetector extends JavaPlugin
         // Commands
         
         this.getCommand("alt").setExecutor(new Commands(this));
+        this.getCommand("alt").setTabCompleter(new TabComplete(this));
         
         // Metrics
         
