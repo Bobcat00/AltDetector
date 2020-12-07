@@ -113,11 +113,17 @@ public class Config
     
     // Update the config file with new fields.
     
+    private boolean contains(String path, boolean ignoreDefault)
+    {
+        // This duplicates the method added in 1.9, Bukkit commit facc9c353c3
+        return ((ignoreDefault) ? plugin.getConfig().get(path, null) : plugin.getConfig().get(path)) != null;
+    }
+    
     public void updateConfig()
     {
-        if (!plugin.getConfig().contains("expiration-time", true))
+        if (!contains("expiration-time", true))
         {
-            if (plugin.getConfig().contains("expirationtime", true))
+            if (contains("expirationtime", true))
             {
                 plugin.getConfig().set("expiration-time", plugin.getConfig().getLong("expirationtime"));
             }
@@ -127,9 +133,9 @@ public class Config
             }
         }
         
-        if (!plugin.getConfig().contains("save-interval", true))
+        if (!contains("save-interval", true))
         {
-            if (plugin.getConfig().contains("saveinterval", true))
+            if (contains("saveinterval", true))
             {
                 plugin.getConfig().set("save-interval", plugin.getConfig().getLong("saveinterval"));
             }
@@ -139,72 +145,72 @@ public class Config
             }
         }
         
-        if (!plugin.getConfig().contains("join-player-prefix", true))
+        if (!contains("join-player-prefix", true))
         {
             plugin.getConfig().set("join-player-prefix", "&b[AltDetector] ");
         }
         
-        if (!plugin.getConfig().contains("join-player", true))
+        if (!contains("join-player", true))
         {
             plugin.getConfig().set("join-player", "{0} may be an alt of ");
         }
         
-        if (!plugin.getConfig().contains("join-player-list", true))
+        if (!contains("join-player-list", true))
         {
             plugin.getConfig().set("join-player-list", "{0}");
         }
         
-        if (!plugin.getConfig().contains("join-player-separator", true))
+        if (!contains("join-player-separator", true))
         {
             plugin.getConfig().set("join-player-separator", ", ");
         }
         
-        if (!plugin.getConfig().contains("altcmd-player", true))
+        if (!contains("altcmd-player", true))
         {
             plugin.getConfig().set("altcmd-player", "&c{0}&6 may be an alt of ");
         }
         
-        if (!plugin.getConfig().contains("altcmd-player-list", true))
+        if (!contains("altcmd-player-list", true))
         {
             plugin.getConfig().set("altcmd-player-list", "&c{0}");
         }
         
-        if (!plugin.getConfig().contains("altcmd-player-separator", true))
+        if (!contains("altcmd-player-separator", true))
         {
             plugin.getConfig().set("altcmd-player-separator", "&6, ");
         }
         
-        if (!plugin.getConfig().contains("altcmd-playernoalts", true))
+        if (!contains("altcmd-playernoalts", true))
         {
             plugin.getConfig().set("altcmd-playernoalts", "&c{0}&6 has no known alts");
         }
         
-        if (!plugin.getConfig().contains("altcmd-noalts", true))
+        if (!contains("altcmd-noalts", true))
         {
             plugin.getConfig().set("altcmd-noalts", "&6No alts found");
         }
         
-        if (!plugin.getConfig().contains("altcmd-playernotfound", true))
+        if (!contains("altcmd-playernotfound", true))
         {
             plugin.getConfig().set("altcmd-playernotfound", "&4{0} not found");
         }
         
-        if (!plugin.getConfig().contains("altcmd-paramerror", true))
+        if (!contains("altcmd-paramerror", true))
         {
             plugin.getConfig().set("altcmd-paramerror", "&4Must specify at most one player");
         }
         
-        if (!plugin.getConfig().contains("altcmd-noperm", true))
+        if (!contains("altcmd-noperm", true))
         {
             plugin.getConfig().set("altcmd-noperm", "&4You do not have permission for this command");
         }
         
-        if (!plugin.getConfig().contains("delcmd-removedsingular", true))
+        if (!contains("delcmd-removedsingular", true))
         {
             plugin.getConfig().set("delcmd-removedsingular", "&6{0} record removed");
         }
         
-        if (!plugin.getConfig().contains("delcmd-removedplural", true))
+        if (!contains("delcmd-removedplural", true))
         {
             plugin.getConfig().set("delcmd-removedplural", "&6{0} records removed");
         }
