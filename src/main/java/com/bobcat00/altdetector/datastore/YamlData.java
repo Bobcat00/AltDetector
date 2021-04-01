@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-package com.bobcat00.altdetector;
+package com.bobcat00.altdetector.datastore;
 
 import java.io.File;
 import java.io.IOException;
@@ -36,7 +36,9 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
-public class DataStore
+import com.bobcat00.altdetector.AltDetector;
+
+public class YamlData implements Datastore
 {
     private AltDetector plugin;
     
@@ -52,7 +54,7 @@ public class DataStore
     private static final String IP_FILE_NAME = "ipdata.yml";
     
     // Constructor
-    public DataStore(AltDetector plugin)
+    public YamlData(AltDetector plugin)
     {
         this.plugin = plugin;
         
@@ -302,17 +304,6 @@ public class DataStore
         Collections.sort(altList, String.CASE_INSENSITIVE_ORDER);
         
         return altList;
-    }
-    
-    // -------------------------------------------------------------------------
-    
-    // Class to allow lookupOfflinePlayer to return three values.
-    
-    public class PlayerDataType
-    {
-        String ip;
-        String uuid;
-        String name;
     }
     
     // -------------------------------------------------------------------------

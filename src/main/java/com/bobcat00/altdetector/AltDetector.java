@@ -19,12 +19,15 @@ package com.bobcat00.altdetector;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import com.bobcat00.altdetector.datastore.Datastore;
+import com.bobcat00.altdetector.datastore.YamlData;
+
 public class AltDetector extends JavaPlugin
 {
-    long expirationTime = 60;
-    long saveInterval = 1;
+    public long expirationTime = 60;
+    public long saveInterval = 1;
     Config config;
-    DataStore dataStore;
+    Datastore dataStore;
     Listeners listeners;
     
     @Override
@@ -52,7 +55,7 @@ public class AltDetector extends JavaPlugin
         
         // DataStore
         
-        dataStore = new DataStore(this);
+        dataStore = new YamlData(this); // For YAML file
         
         dataStore.saveDefaultConfig();
         dataStore.reloadIpDataConfig();

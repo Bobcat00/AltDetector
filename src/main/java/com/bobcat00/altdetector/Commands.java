@@ -28,7 +28,9 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import com.bobcat00.altdetector.DataStore.PlayerDataType;
+import com.bobcat00.altdetector.datastore.Datastore.PlayerDataType;
+
+//import com.bobcat00.altdetector.datastore.PlayerDataType;
 
 public class Commands implements CommandExecutor
 {
