@@ -57,12 +57,12 @@ public class Listeners implements Listener
         }
         
         // Get possible alts
-        String altString = plugin.dataStore.getFormattedAltString(name,
-                                                                  ip,
-                                                                  uuid,
-                                                                  plugin.config.getJoinPlayer(),
-                                                                  plugin.config.getJoinPlayerList(),
-                                                                  plugin.config.getJoinPlayerSeparator());
+        String altString = plugin.getFormattedAltString(name,
+                                                        ip,
+                                                        uuid,
+                                                        plugin.config.getJoinPlayer(),
+                                                        plugin.config.getJoinPlayerList(),
+                                                        plugin.config.getJoinPlayerSeparator());
         
         if (altString != null)
         {

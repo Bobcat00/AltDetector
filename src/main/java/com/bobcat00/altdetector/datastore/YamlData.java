@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
-import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -356,44 +355,4 @@ public class YamlData implements Datastore
         return playerData;
     }
     
-    // -------------------------------------------------------------------------
-    
-    // Look up the alts for a player, and return a formatted string using the &
-    // color codes. If no alts are found, the returned string is null.
-    
-    public String getFormattedAltString(String name,
-                                        String ip,
-                                        String uuid,
-                                        String playerFormat,
-                                        String playerListFormat,
-                                        String playerSeparator)
-    {
-        // Get possible alts
-        List<String> altList = getAltNames(ip, uuid);
-        
-        if (!altList.isEmpty())
-        {
-            // name may be an alt of
-            StringBuilder sb = new StringBuilder(MessageFormat.format(playerFormat, name));
-            
-            boolean outputComma = false;
-            
-            for (String altName : altList)
-            {
-                // comma
-                if (outputComma)
-                {
-                    sb.append(playerSeparator);
-                }
-                outputComma = true;
-                
-                // altName
-                sb.append(MessageFormat.format(playerListFormat, altName));
-            }
-            return sb.toString();
-        }
-        
-        return null; // No alts found
-    }
-
 }

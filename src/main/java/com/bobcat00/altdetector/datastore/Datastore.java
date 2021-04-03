@@ -54,13 +54,4 @@ public interface Datastore
     
     // Take a playerName and look up the most recent IP address, UUID, and name.
     public PlayerDataType lookupOfflinePlayer(String playerName);
-    
-    // Look up the alts for a player, and return a formatted string using the &
-    // color codes. If no alts are found, the returned string is null.
-    public String getFormattedAltString(String name,
-                                        String ip,
-                                        String uuid,
-                                        String playerFormat,
-                                        String playerListFormat,
-                                        String playerSeparator);
 }

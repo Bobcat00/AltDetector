@@ -16,6 +16,9 @@
 
 package com.bobcat00.altdetector;
 
+import java.text.MessageFormat;
+import java.util.List;
+
 import org.bstats.bukkit.Metrics;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -115,6 +118,8 @@ public class AltDetector extends JavaPlugin
         }
     }
     
+    // -------------------------------------------------------------------------
+    
     @Override
     public void onDisable()
     {
@@ -122,6 +127,46 @@ public class AltDetector extends JavaPlugin
         {
             dataStore.saveIpDataConfig();
         }
+    }
+
+    // -------------------------------------------------------------------------
+    
+    // Look up the alts for a player, and return a formatted string using the &
+    // color codes. If no alts are found, the returned string is null.
+    
+    protected String getFormattedAltString(String name,
+                                           String ip,
+                                           String uuid,
+                                           String playerFormat,
+                                           String playerListFormat,
+                                           String playerSeparator)
+    {
+        // Get possible alts
+        List<String> altList = dataStore.getAltNames(ip, uuid);
+        
+        if (!altList.isEmpty())
+        {
+            // name may be an alt of
+            StringBuilder sb = new StringBuilder(MessageFormat.format(playerFormat, name));
+            
+            boolean outputComma = false;
+            
+            for (String altName : altList)
+            {
+                // comma
+                if (outputComma)
+                {
+                    sb.append(playerSeparator);
+                }
+                outputComma = true;
+                
+                // altName
+                sb.append(MessageFormat.format(playerListFormat, altName));
+            }
+            return sb.toString();
+        }
+        
+        return null; // No alts found
     }
 
 }

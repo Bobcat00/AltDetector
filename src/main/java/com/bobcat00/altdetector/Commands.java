@@ -204,12 +204,12 @@ public class Commands implements CommandExecutor
     private boolean outputAlts(CommandSender sender, String name, String ip, String uuid)
     {
         // Get possible alts
-        String altString = plugin.dataStore.getFormattedAltString(name,
-                                                                  ip,
-                                                                  uuid,
-                                                                  plugin.config.getAltCmdPlayer(),
-                                                                  plugin.config.getAltCmdPlayerList(),
-                                                                  plugin.config.getAltCmdPlayerSeparator());
+        String altString = plugin.getFormattedAltString(name,
+                                                        ip,
+                                                        uuid,
+                                                        plugin.config.getAltCmdPlayer(),
+                                                        plugin.config.getAltCmdPlayerList(),
+                                                        plugin.config.getAltCmdPlayerSeparator());
         
         if (altString != null)
         {
