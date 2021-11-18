@@ -40,7 +40,7 @@ public class DataStore
 {
     private AltDetector plugin;
     
-    private boolean saveData = false;
+    private volatile boolean saveData = false;
     
     // Contains all the player names in the data file.  This is intended for use with the
     // tab complete capability.  Mojang's Brigadier acts weird with mixed-case names, so
@@ -52,6 +52,7 @@ public class DataStore
     private static final String IP_FILE_NAME = "ipdata.yml";
     
     // Constructor
+    @SuppressWarnings("deprecation")
     public DataStore(AltDetector plugin)
     {
         this.plugin = plugin;
@@ -59,7 +60,7 @@ public class DataStore
         // Periodic task to save data
         if (plugin.saveInterval > 0)
         {
-            Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
+            Bukkit.getScheduler().scheduleAsyncRepeatingTask(plugin, new Runnable() {
                 @Override
                 public void run()
                 {
@@ -78,7 +79,7 @@ public class DataStore
     // File management
     
     // Reload file
-    public void reloadIpDataConfig()
+    public synchronized void reloadIpDataConfig()
     {
         if (ipDataFile == null)
         {
@@ -103,7 +104,7 @@ public class DataStore
     }
     
     // Get file
-    public FileConfiguration getIpDataConfig()
+    public synchronized FileConfiguration getIpDataConfig()
     {
         if (ipDataConfig == null)
         {
@@ -113,7 +114,7 @@ public class DataStore
     }
     
     // Save file
-    public void saveIpDataConfig()
+    public synchronized void saveIpDataConfig()
     {
         if (ipDataConfig == null || ipDataFile == null)
         {
@@ -131,7 +132,7 @@ public class DataStore
     }
     
     // Save defaults
-    public void saveDefaultConfig()
+    public synchronized void saveDefaultConfig()
     {
         if (ipDataFile == null)
         {
@@ -147,7 +148,7 @@ public class DataStore
     
     // Generates playerList 
     
-    public void generatePlayerList()
+    public synchronized void generatePlayerList()
     {
         playerList.clear();
         
@@ -177,7 +178,7 @@ public class DataStore
     
     // -------------------------------------------------------------------------
     
-    public List<String> getPlayerList()
+    public synchronized List<String> getPlayerList()
     {
         List<String> pl = new ArrayList<>(playerList);
         pl.sort(null);
@@ -191,7 +192,7 @@ public class DataStore
     // all entries older than the expiration time (if the name is "").
     // It returns a count of the number purged.
     
-    public int purge(String name)
+    public synchronized int purge(String name)
     {
         List<String> removeList = new ArrayList<String>();
         int recordsPurged = 0;
@@ -256,7 +257,7 @@ public class DataStore
     
     // This method adds or updates an entry.  The date is included.
     
-    public void addUpdateIp(String ip, String uuid, String name)
+    public synchronized void addUpdateIp(String ip, String uuid, String name)
     {
         Date date = new Date();
         getIpDataConfig().set("ip." +
@@ -272,7 +273,7 @@ public class DataStore
     // This method returns a list of names that match the given IP address.  It
     // may contain the (current) player, unless it is excluded.
     
-    public List<String> getAltNames(String ip, String excludeUuid)
+    private synchronized List<String> getAltNames(String ip, String excludeUuid)
     {
         List<String> altList = new ArrayList<String>();
         
@@ -319,7 +320,7 @@ public class DataStore
     
     // Take a playerName and look up the most recent IP address, UUID, and name.
     
-    public PlayerDataType lookupOfflinePlayer(String playerName)
+    public synchronized PlayerDataType lookupOfflinePlayer(String playerName)
     {
         // Return value
         PlayerDataType playerData = null;
