@@ -115,6 +115,12 @@ public class Commands implements CommandExecutor
                             // n records removed
                             sender.sendMessage(ChatColor.translateAlternateColorCodes('&', MessageFormat.format(plugin.config.getDelCmdRemovedPlural(), entriesRemoved)));
                         }
+                        
+                        if (entriesRemoved >= 1 && plugin.saveInterval == 0)
+                        {
+                            plugin.dataStore.saveIpDataConfig();
+                        }
+                    
                     }
                 }
                 else
