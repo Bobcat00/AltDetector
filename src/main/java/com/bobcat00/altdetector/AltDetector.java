@@ -17,6 +17,7 @@
 package com.bobcat00.altdetector;
 
 import org.bstats.bukkit.Metrics;
+import org.bstats.charts.SimplePie;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class AltDetector extends JavaPlugin
@@ -76,40 +77,38 @@ public class AltDetector extends JavaPlugin
         
         int pluginId = 4862;
         Metrics metrics = new Metrics(this, pluginId);
-        if (metrics.isEnabled())
-        {
-            String option = "Invalid";
-            if (expirationTime < 0)
-                option = "Invalid";
-            else if (expirationTime == 0)
-                option = "0";
-            else if (expirationTime <= 30)
-                option = "1-30";
-            else if (expirationTime <= 60)
-                option = "31-60";
-            else if (expirationTime <= 90)
-                option = "61-90";
-            else if (expirationTime > 90)
-                option = ">90";
-            final String setting = option;
-            metrics.addCustomChart(new Metrics.SimplePie("expiration_time", () -> setting));
-            
+
+        String option = "Invalid";
+        if (expirationTime < 0)
             option = "Invalid";
-            if (saveInterval < 0)
-                option = "Invalid";
-            else if (saveInterval == 0)
-                option = "0";
-            else if (saveInterval <= 5)
-                option = "1-5";
-            else if (saveInterval <= 10)
-                option = "6-10";
-            else if (saveInterval > 10)
-                option = ">10";
-            final String setting2 = option;
-            metrics.addCustomChart(new Metrics.SimplePie("save_interval", () -> setting2));
-            
-            getLogger().info("Enabled metrics. You may opt-out by changing plugins/bStats/config.yml");
-        }
+        else if (expirationTime == 0)
+            option = "0";
+        else if (expirationTime <= 30)
+            option = "1-30";
+        else if (expirationTime <= 60)
+            option = "31-60";
+        else if (expirationTime <= 90)
+            option = "61-90";
+        else if (expirationTime > 90)
+            option = ">90";
+        final String setting = option;
+        metrics.addCustomChart(new SimplePie("expiration_time", () -> setting));
+
+        option = "Invalid";
+        if (saveInterval < 0)
+            option = "Invalid";
+        else if (saveInterval == 0)
+            option = "0";
+        else if (saveInterval <= 5)
+            option = "1-5";
+        else if (saveInterval <= 10)
+            option = "6-10";
+        else if (saveInterval > 10)
+            option = ">10";
+        final String setting2 = option;
+        metrics.addCustomChart(new SimplePie("save_interval", () -> setting2));
+
+        getLogger().info("Metrics enabled if allowed by plugins/bStats/config.yml");
     }
     
     @Override
