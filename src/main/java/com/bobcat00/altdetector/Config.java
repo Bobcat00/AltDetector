@@ -29,14 +29,85 @@ public class Config
         this.plugin = plugin;
     }
     
-    public long getExpirationTime()
+    public int getExpirationTime()
     {
-        return plugin.getConfig().getLong("expiration-time");
+        return plugin.getConfig().getInt("expiration-time");
     }
     
-    public long getSaveInterval()
+    public String getDatabaseType()
     {
-        return plugin.getConfig().getLong("save-interval");
+        return plugin.getConfig().getString("database-type");
+    }
+    
+    public String getMysqlHostname()
+    {
+        return plugin.getConfig().getString("mysql.hostname");
+    }
+    
+    public String getMysqlUsername()
+    {
+        return plugin.getConfig().getString("mysql.username");
+    }
+    
+    public String getMysqlPassword()
+    {
+        return plugin.getConfig().getString("mysql.password");
+    }
+    
+    public String getMysqlDatabase()
+    {
+        return plugin.getConfig().getString("mysql.database");
+    }
+    
+    public String getMysqlPrefix()
+    {
+        return plugin.getConfig().getString("mysql.prefix");
+    }
+    
+    public int getMysqlPort()
+    {
+        return plugin.getConfig().getInt("mysql.port");
+    }
+    
+    public String getJdbcurlProperties()
+    {
+        return plugin.getConfig().getString("mysql.jdbcurl-properties");
+    }
+    
+    enum ConvertFromType
+    {
+        NONE,
+        YML,
+        SQLITE,
+        MYSQL,
+        ERROR
+    }
+    
+    public ConvertFromType getConvertFrom()
+    {
+        String cf = plugin.getConfig().getString("convert-from");
+        if (cf.equalsIgnoreCase("none"))
+        {
+            return ConvertFromType.NONE;
+        }
+        if (cf.equalsIgnoreCase("yml") || cf.equalsIgnoreCase("yaml"))
+        {
+            return ConvertFromType.YML;
+        }
+        if (cf.equalsIgnoreCase("sqlite"))
+        {
+            return ConvertFromType.SQLITE;
+        }
+        if (cf.equalsIgnoreCase("mysql"))
+        {
+            return ConvertFromType.MYSQL;
+        }
+        return ConvertFromType.ERROR;
+    }
+    
+    public boolean getSqlDebug()
+    {
+        return plugin.getConfig().getBoolean("sql-debug");
     }
     
     public String getJoinPlayerPrefix()
@@ -133,16 +204,27 @@ public class Config
             }
         }
         
-        if (!contains("save-interval", true))
+        if (!contains("database-type", true))
         {
-            if (contains("saveinterval", true))
-            {
-                plugin.getConfig().set("save-interval", plugin.getConfig().getLong("saveinterval"));
-            }
-            else
-            {
-                plugin.getConfig().set("save-interval", 1L);
-            }
+            plugin.getConfig().set("database-type",            "sqlite");
+            plugin.getConfig().set("mysql.hostanme",           "127.0.0.1");
+            plugin.getConfig().set("mysql.username",           "username");
+            plugin.getConfig().set("mysql.password",           "password");
+            plugin.getConfig().set("mysql.database",           "database");
+            plugin.getConfig().set("mysql.prefix",             "altdetector_");
+            plugin.getConfig().set("mysql.port",               3306);
+            plugin.getConfig().set("mysql.jdbcurl-properties", "");
+        }
+        
+        // Set to yml if not found. This indicates an old version is to be converted.
+        if (!contains("convert-from", true))
+        {
+                plugin.getConfig().set("convert-from", "yml");
+        }
+        
+        if (!contains("sql-debug", true))
+        {
+                plugin.getConfig().set("sql-debug", false);
         }
         
         if (!contains("join-player-prefix", true))
@@ -236,8 +318,22 @@ public class Config
             writer.write("expiration-time: " + plugin.getConfig().getLong("expiration-time") + "\n");
             writer.write("\n");
             
-            writer.write("# Save interval in minutes (0 for immediate)"                      + "\n");
-            writer.write("save-interval: "   + plugin.getConfig().getLong("save-interval")   + "\n");
+            writer.write("# Database type sqlite, mysql"                                                            + "\n");
+            writer.write("database-type: "         + plugin.getConfig().getString("database-type")                  + "\n");
+            writer.write("mysql:"                                                                                   + "\n");
+            writer.write("  hostname: "            + plugin.getConfig().getString("mysql.hostname")                 + "\n");
+            writer.write("  username: "            + plugin.getConfig().getString("mysql.username")                 + "\n");
+            writer.write("  password: "            + plugin.getConfig().getString("mysql.password")                 + "\n");
+            writer.write("  database: "            + plugin.getConfig().getString("mysql.database")                 + "\n");
+            writer.write("  prefix: "              + plugin.getConfig().getString("mysql.prefix")                   + "\n");
+            writer.write("  port: "                + plugin.getConfig().getInt   ("mysql.port")                     + "\n");
+            writer.write("  jdbcurl-properties: '" + plugin.getConfig().getString("mysql.jdbcurl-properties") + "'" + "\n");
+            writer.write("\n");
+            
+            writer.write("# Convert from none, yml, sqlite, mysql (normally handled automatically)"   + "\n");
+            writer.write("convert-from: "              + plugin.getConfig().getString("convert-from") + "\n");
+            writer.write("# Debug SQL statements"                                                     + "\n");
+            writer.write("sql-debug: "                 + plugin.getConfig().getBoolean("sql-debug")   + "\n");
             writer.write("\n");
             
             writer.write("# Messages when player joins the server"                                                                                + "\n");

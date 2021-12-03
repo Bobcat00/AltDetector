@@ -28,12 +28,17 @@ public class TabComplete implements TabCompleter
 {
     private AltDetector plugin;
     
+    // Constructor
+    
     public TabComplete(AltDetector plugin)
     {
         this.plugin = plugin;
     }
     
-    // Check permission if the sender is a player, other return true
+    // -------------------------------------------------------------------------
+    
+    // Check permission if the sender is a player, otherwise return true
+    
     private boolean hasPermission(CommandSender sender, String permission)
     {
         if (!(sender instanceof Player))
@@ -46,8 +51,11 @@ public class TabComplete implements TabCompleter
         }
     }
     
-    // Return list elements starting with str, case insensitive comparison.
-    // This is used instead of a stream filter in order to get a proper comparison.
+    // -------------------------------------------------------------------------
+    
+    // Return list elements starting with str, case insensitive comparison. This
+    // is used instead of a stream filter in order to get a proper comparison.
+    
     private List<String> filterList(List<String> list, String str)
     {
         List<String> al = new ArrayList<String>();
@@ -62,6 +70,10 @@ public class TabComplete implements TabCompleter
         
         return al;
     }
+    
+    // -------------------------------------------------------------------------
+    
+    // Tab Complete listener 
     
     @Override
     public List<String> onTabComplete(CommandSender sender, Command cmd, String alias, String[] args)
@@ -84,14 +96,14 @@ public class TabComplete implements TabCompleter
                 }
                 if (hasPermission(sender, "altdetector.alt"))
                 {
-                    argList.addAll(plugin.dataStore.getPlayerList());
+                    argList.addAll(plugin.database.getPlayerList());
                 }
                 return filterList(argList, args[0]);
             }
             
             if (args.length == 2 && args[0].equals("delete") && hasPermission(sender, "altdetector.alt.delete"))
             {
-                argList.addAll(plugin.dataStore.getPlayerList());
+                argList.addAll(plugin.database.getPlayerList());
                 return filterList(argList, args[1]);
             }
             

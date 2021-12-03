@@ -16,16 +16,24 @@
 
 package com.bobcat00.altdetector;
 
+import java.util.List;
+
 import org.bstats.bukkit.Metrics;
 import org.bstats.charts.SimplePie;
+import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitWorker;
+
+import com.bobcat00.altdetector.Config.ConvertFromType;
+import com.bobcat00.altdetector.database.Database;
+import com.bobcat00.altdetector.database.Mysql;
+import com.bobcat00.altdetector.database.Sqlite;
 
 public class AltDetector extends JavaPlugin
 {
-    long expirationTime = 60;
-    long saveInterval = 1;
-    Config config;
-    DataStore dataStore;
+    int expirationTime = 60;
+    public Config config;
+    Database database;
     Listeners listeners;
     
     @Override
@@ -40,29 +48,59 @@ public class AltDetector extends JavaPlugin
         config.updateConfig();
         
         expirationTime = config.getExpirationTime();
-        saveInterval = config.getSaveInterval();
-        if (saveInterval > 0)
+        
+        // Database
+        
+        if (config.getDatabaseType().equalsIgnoreCase("mysql"))
         {
-            getLogger().info("Database save interval " + saveInterval + " minute" + (saveInterval == 1 ? "." : "s."));
+            database = new Mysql(this, config.getSqlDebug(), config.getMysqlPrefix());
         }
         else
         {
-            saveInterval = 0;
-            getLogger().info("Saving to database as each player connects.");
+            database = new Sqlite(this, config.getSqlDebug(), ""); // no prefix for SQLite
         }
         
-        // DataStore
+        // Initialize database
+        boolean initSuccessful = database.initialize();
         
-        dataStore = new DataStore(this);
-        
-        dataStore.saveDefaultConfig();
-        dataStore.reloadIpDataConfig();
-        
-        int entriesRemoved = dataStore.purge(""); // purged based on date
-        dataStore.saveIpDataConfig();
-        dataStore.generatePlayerList();
-        
-        getLogger().info(entriesRemoved + " record" + (entriesRemoved == 1 ? "" : "s") + " removed, expiration time " + expirationTime + " days.");
+        if (initSuccessful)
+        {
+            getLogger().info("Using " + database.toString() + " database, version " + database.getSqlVersion() + ", driver version " + database.getDriverVersion());
+            
+            // Database conversion
+            
+            ConvertFromType convertFrom = config.getConvertFrom();
+            
+            switch(convertFrom)
+            {
+            case NONE:
+                break;
+                
+            case YML:
+            case SQLITE:
+            case MYSQL:
+                // Convert database
+                convertDb(convertFrom);
+                break;
+                
+            case ERROR:
+                getLogger().warning("Invalid convert-from database conversion option specified in config.yml.");
+                break;
+            }
+            
+            // Database purge
+            
+            int entriesRemoved = database.purge(expirationTime);
+            getLogger().info(entriesRemoved + " record" + (entriesRemoved == 1 ? "" : "s") + " removed, expiration time " + expirationTime + " days.");
+            
+            // Generate player list
+            database.generatePlayerList();
+        }
+        else
+        {
+            // Database init failed
+            getLogger().warning("Initialization of " + database.toString() + " database failed.");
+        }
         
         // Listeners
         
@@ -93,31 +131,113 @@ public class AltDetector extends JavaPlugin
             option = ">90";
         final String setting = option;
         metrics.addCustomChart(new SimplePie("expiration_time", () -> setting));
-
-        option = "Invalid";
-        if (saveInterval < 0)
-            option = "Invalid";
-        else if (saveInterval == 0)
-            option = "0";
-        else if (saveInterval <= 5)
-            option = "1-5";
-        else if (saveInterval <= 10)
-            option = "6-10";
-        else if (saveInterval > 10)
-            option = ">10";
-        final String setting2 = option;
-        metrics.addCustomChart(new SimplePie("save_interval", () -> setting2));
+        
+        metrics.addCustomChart(new SimplePie("database_type", () -> database.toString()));
 
         getLogger().info("Metrics enabled if allowed by plugins/bStats/config.yml");
     }
     
+    // -------------------------------------------------------------------------
+    
+    // Convert database from 'convertFrom' to the database-type type specified
+    // in the config file
+    
+    private void convertDb(ConvertFromType convertFrom)
+    {
+        boolean conversionSuccessful = false;
+
+        if (convertFrom == ConvertFromType.YML)
+        {
+            // Convert from YAML
+            getLogger().info("Converting from YML to " + database.toString() + " database. This may take a while, please be patient.");
+            ConvertYaml convertYml = new ConvertYaml(this);
+            conversionSuccessful = convertYml.convert();
+        }
+        else if (convertFrom == ConvertFromType.SQLITE || convertFrom == ConvertFromType.MYSQL)
+        {
+            Database oldDb = null;
+            if (convertFrom == ConvertFromType.MYSQL)
+            {
+                oldDb = new Mysql(this, config.getSqlDebug(), config.getMysqlPrefix());
+            }
+            else
+            {
+                oldDb = new Sqlite(this, config.getSqlDebug(), ""); // no prefix for SQLite
+            }
+            
+            // Convert between SQL databases - make sure they're different types
+            if (!database.getClass().equals(oldDb.getClass()))
+            {
+                boolean initSuccessful = oldDb.initialize();
+                if (initSuccessful)
+                {
+                    getLogger().info("Converting from " + oldDb.toString() + " to " + database.toString() + " database. This may take a while, please be patient.");
+                    ConvertSql convertSql = new ConvertSql(this);
+                    conversionSuccessful = convertSql.convert(oldDb, database);
+                }
+                else
+                {
+                    getLogger().warning("Initialization of " + oldDb.toString() + " database failed.");
+                }
+                oldDb.closeDataSource(); // only opened databases should be closed
+            }
+            else
+            {
+                getLogger().warning("Invalid database conversion options specified in config.yml.");
+            }
+        }
+        
+        if (conversionSuccessful)
+        {
+            // Set to not convert in the future
+            getConfig().set("convert-from", "none");
+            config.saveConfig();
+            getLogger().info("Successfully converted to " + database.toString() + " database.");
+        }
+        else
+        {
+            getLogger().warning("Conversion to " + database.toString() + " database failed. Old data not converted.");
+        }
+        
+    }
+    
+    // -------------------------------------------------------------------------
+    
     @Override
     public void onDisable()
     {
-        if (saveInterval > 0)
+        // Wait up to 5 seconds for our async tasks to complete
+        for (int i=0; i<50; ++i)
         {
-            dataStore.saveIpDataConfig();
+            List<BukkitWorker> workers = Bukkit.getScheduler().getActiveWorkers();
+            boolean taskFound = false;
+
+            for (BukkitWorker worker : workers)
+            {
+                if (worker.getOwner().equals(this))
+                {
+                    taskFound = true;
+                    break; // inner loop
+                }
+            }
+
+            if (!taskFound)
+            {
+                break; // outer loop
+            }
+
+            try
+            {
+                Thread.sleep(100); // msec
+            }
+            catch (InterruptedException e)
+            {
+            }
         }
+
+        // Close database
+
+        database.closeDataSource();
     }
 
 }

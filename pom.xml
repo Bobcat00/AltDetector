@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.bobcat00</groupId>
   <artifactId>AltDetector</artifactId>
-  <version>1.12-SNAPSHOT</version>
+  <version>2.00-SNAPSHOT</version>
   <build>
     <resources>
       <resource>
@@ -30,16 +30,21 @@
           <target>1.8</target>
         </configuration>
       </plugin>
-      <!--  bStats -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
-        <version>3.1.0</version>
+        <version>3.2.4</version>
         <configuration>
           <relocations>
+            <!--  HikariCP -->
+            <relocation>
+              <pattern>com.zaxxer.hikari</pattern>
+              <shadedPattern>com.bobcat00.altdetector.hikari</shadedPattern>
+            </relocation>
+            <!--  bStats -->
             <relocation>
               <pattern>org.bstats</pattern>
-              <shadedPattern>com.bobcat00.altdetector</shadedPattern>
+              <shadedPattern>com.bobcat00.altdetector.bstats</shadedPattern>
             </relocation>
           </relocations>
         </configuration>
@@ -67,6 +72,13 @@
       <version>1.13.2-R0.1-SNAPSHOT</version>
       <type>jar</type>
       <scope>provided</scope>
+    </dependency>
+    <!--  HikariCP for Java 8 -->
+    <dependency>
+      <groupId>com.zaxxer</groupId>
+      <artifactId>HikariCP</artifactId>
+      <version>4.0.3</version>
+      <scope>compile</scope>
     </dependency>
     <!--  bStats -->
     <dependency>

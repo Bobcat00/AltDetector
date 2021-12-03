@@ -16,6 +16,9 @@
 
 package com.bobcat00.altdetector;
 
+import java.util.Locale;
+
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -27,11 +30,110 @@ public class Listeners implements Listener
 {
     private AltDetector plugin;
     
+    // Constructor
+    
     public Listeners(AltDetector plugin)
     {
         this.plugin = plugin;
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
+    
+    // -------------------------------------------------------------------------
+    
+    // Callback method used for returning alt string to main thread
+    
+    private interface Callback<T>
+    {
+        public void execute(T response);
+    }
+    
+    // -------------------------------------------------------------------------
+    
+    // Update database with player and IP data, and returns the alts of the
+    // player via a callback. If there are no alts, the callback is not called.
+    
+    private void updateDatabaseGetAlts(final String ip,
+                                       final String uuid,
+                                       final String name,
+                                       final Callback<String> callback)
+    {
+        final String joinPlayer          = plugin.config.getJoinPlayer();
+        final String joinPlayerList      = plugin.config.getJoinPlayerList();
+        final String joinPlayerSeparator = plugin.config.getJoinPlayerSeparator();
+        
+        // Go to async thread
+        
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                // 1. Update playertable
+                
+                String playerName = plugin.database.getNameFromPlayertable(uuid);
+                
+                if (playerName.equals(""))
+                {
+                    // Not found, add to playertable
+                    plugin.database.addPlayertableEntry(name, uuid);
+                }
+                else if (!playerName.equals(name))
+                {
+                    // Player changed name, update playertable
+                    plugin.database.updateNameInPlayertable(name, uuid);
+                }
+                
+                // 2. Update iptable
+                
+                boolean ipEntryExists = plugin.database.checkIptableEntry(ip, uuid);
+                
+                if (!ipEntryExists)
+                {
+                    // Add to iptable
+                    plugin.database.addIptableEntry(ip, uuid);
+                }
+                else
+                {
+                    // Update date in iptable
+                    plugin.database.updateIptableEntry(ip, uuid);
+                }
+                
+                // 3. Get possible alts
+                
+                String altString = plugin.database.getFormattedAltString(name,
+                                                                         ip,
+                                                                         uuid,
+                                                                         joinPlayer,
+                                                                         joinPlayerList,
+                                                                         joinPlayerSeparator,
+                                                                         plugin.expirationTime);
+                
+                if (altString != null)
+                {
+                    // Go back to the main thread
+                    Bukkit.getScheduler().runTask(plugin, new Runnable()
+                    {
+                        @Override
+                        public void run()
+                        {
+                            // Call the callback with the result
+                            callback.execute(altString);
+                        }
+                    });
+                }
+            
+            }
+            
+        }
+        );
+    
+    }
+    
+    // -------------------------------------------------------------------------
+    
+    // This is the listener for the Player Join Event. It calls a method to
+    // update the database asynchronously and has a callback to output the
+    // String listing player's alts. 
     
     @EventHandler(priority = EventPriority.HIGH)
     public void onPlayerJoin(PlayerJoinEvent event)
@@ -45,43 +147,33 @@ public class Listeners implements Listener
         }
         
         // Get info about this player
-        String ip = player.getAddress().getAddress().getHostAddress();
-        String uuid = player.getUniqueId().toString();
-        String name = player.getName();
+        final String ip = player.getAddress().getAddress().getHostAddress().toLowerCase(Locale.ROOT).split("%")[0];
+        final String uuid = player.getUniqueId().toString();
+        final String name = player.getName();
         
-        // Add to the database
-        plugin.dataStore.addUpdateIp(ip, uuid, name);
-        if (plugin.saveInterval == 0)
+        // Add to the database - async (mostly)
+        updateDatabaseGetAlts(ip, uuid, name, new Callback<String>()
         {
-            plugin.dataStore.saveIpDataConfig();
-        }
-        
-        // Get possible alts
-        String altString = plugin.dataStore.getFormattedAltString(name,
-                                                                  ip,
-                                                                  uuid,
-                                                                  plugin.config.getJoinPlayer(),
-                                                                  plugin.config.getJoinPlayerList(),
-                                                                  plugin.config.getJoinPlayerSeparator());
-        
-        if (altString != null)
-        {
-            // Output to log file without color codes
-            plugin.getLogger().info(altString.replaceAll("&[0123456789AaBbCcDdEeFfKkLlMmNnOoRr]", ""));
-            
-            // Output including prefix to players with altdetector.notify
-            String notifyString = ChatColor.translateAlternateColorCodes('&', plugin.config.getJoinPlayerPrefix() + altString);
-            
-            for (Player p : plugin.getServer().getOnlinePlayers())
+            // Process alt string - main thread
+            @Override
+            public void execute(String altString)
             {
-                if (p.hasPermission("altdetector.notify"))
+                // Output to log file without color codes
+                plugin.getLogger().info(altString.replaceAll("&[0123456789AaBbCcDdEeFfKkLlMmNnOoRr]", ""));
+
+                // Output including prefix to players with altdetector.notify
+                String notifyString = ChatColor.translateAlternateColorCodes('&', plugin.config.getJoinPlayerPrefix() + altString);
+
+                for (Player p : plugin.getServer().getOnlinePlayers())
                 {
-                    p.sendMessage(notifyString);
+                    if (p.hasPermission("altdetector.notify"))
+                    {
+                        p.sendMessage(notifyString);
+                    }
                 }
             }
-
         }
-        
+        );
     }
 
 }

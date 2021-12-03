@@ -1,8 +1,21 @@
 # Data expiration time in days
 expiration-time: 60
 
-# Save interval in minutes (0 for immediate)
-save-interval: 1
+# Database type sqlite, mysql
+database-type: sqlite
+mysql:
+  hostname: 127.0.0.1
+  username: username
+  password: password
+  database: databasename
+  prefix: altdetector_
+  port: 3306
+  jdbcurl-properties: ''
+
+# Convert from yml, sqlite, mysql, none (normally handled automatically)
+convert-from: none
+# Debug SQL statements
+sql-debug: false
 
 # Messages when player joins the server
 join-player-prefix: "&b[AltDetector] "

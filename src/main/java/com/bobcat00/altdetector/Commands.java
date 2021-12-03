@@ -18,8 +18,10 @@ package com.bobcat00.altdetector;
 
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -28,19 +30,30 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import com.bobcat00.altdetector.DataStore.PlayerDataType;
+import com.bobcat00.altdetector.database.Database.PlayerDataType;
 
 public class Commands implements CommandExecutor
 {
     private AltDetector plugin;
+    
+    // Constructor
     
     public Commands(AltDetector plugin)
     {
         this.plugin = plugin;
     }
     
+    // -------------------------------------------------------------------------
+    
+    // This processes the /alt command. After parsing the command and collecting
+    // data about the player(s) involved, it uses an async task to do the
+    // database work. Unlike the Player Join Event listener, which can output a
+    // string to all players on the server, this method only outputs to the
+    // command sender. It doesn't use a callback, but simply calls a method to
+    // output the string(s) to the command sender on the main thread.
+    
     @Override
-    public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args)
+    public boolean onCommand(final CommandSender sender, final Command cmd, final String label, final String[] args)
     {
         if (cmd.getName().equalsIgnoreCase("alt"))
         {
@@ -98,29 +111,35 @@ public class Commands implements CommandExecutor
                     }
                     else
                     {
-                        int entriesRemoved = plugin.dataStore.purge(args[1]);
+                        final String altCmdPlayerNotFound  = plugin.config.getAltCmdPlayerNotFound();
+                        final String delCmdRemovedSingular = plugin.config.getDelCmdRemovedSingular();
+                        final String delCmdRemovedPlural   = plugin.config.getDelCmdRemovedPlural();
                         
-                        if (entriesRemoved == 0)
+                        // Go to async thread
+                        Bukkit.getScheduler().runTaskAsynchronously(plugin, new Runnable()
                         {
-                            // playerName not found
-                            sender.sendMessage(ChatColor.translateAlternateColorCodes('&', MessageFormat.format(plugin.config.getAltCmdPlayerNotFound(), args[1])));
-                        }
-                        else if (entriesRemoved == 1)
-                        {
-                            // 1 record removed
-                            sender.sendMessage(ChatColor.translateAlternateColorCodes('&', MessageFormat.format(plugin.config.getDelCmdRemovedSingular(), entriesRemoved)));
-                        }
-                        else
-                        {
-                            // n records removed
-                            sender.sendMessage(ChatColor.translateAlternateColorCodes('&', MessageFormat.format(plugin.config.getDelCmdRemovedPlural(), entriesRemoved)));
-                        }
-                        
-                        if (entriesRemoved >= 1 && plugin.saveInterval == 0)
-                        {
-                            plugin.dataStore.saveIpDataConfig();
-                        }
-                    
+                            @Override
+                            public void run()
+                            {
+                                int entriesRemoved = plugin.database.purge(args[1]);
+
+                                if (entriesRemoved == 0)
+                                {
+                                    // playerName not found
+                                    sendMessageSync(sender, MessageFormat.format(altCmdPlayerNotFound, args[1]));
+                                }
+                                else if (entriesRemoved == 1)
+                                {
+                                    // 1 record removed
+                                    sendMessageSync(sender, MessageFormat.format(delCmdRemovedSingular, entriesRemoved));
+                                }
+                                else
+                                {
+                                    // n records removed
+                                    sendMessageSync(sender, MessageFormat.format(delCmdRemovedPlural, entriesRemoved));
+                                }
+                            }
+                        });
                     }
                 }
                 else
@@ -138,34 +157,68 @@ public class Commands implements CommandExecutor
                 return true;
             }
             
-            boolean altsFound = false;
+            // Lookup alt(s) and output to sender
             
-            // Loop through the list of players
+            // Get ip and uuid for each player while on main thread
+            List<PlayerDataType> playerDataList = new ArrayList<>();
             for (String name : playerList)
             {
-                // Get player's IP address and uuid
+                PlayerDataType playerData = plugin.database.new PlayerDataType();
                 @SuppressWarnings("deprecation")
                 Player player = Bukkit.getServer().getPlayerExact(name);
-                String ip = player.getAddress().getAddress().getHostAddress();
-                String uuid = player.getUniqueId().toString();
-                
-                altsFound |= outputAlts(sender, name, ip, uuid);
-                
-            } // end for each name
-            
-            if (!altsFound)
-            {
-                if (args.length == 0)
-                {
-                    // No alts found
-                    sender.sendMessage(ChatColor.translateAlternateColorCodes('&', plugin.config.getAltCmdNoAlts()));
-                }
-                else
-                {
-                    // args[0] has no known alts
-                    sender.sendMessage(ChatColor.translateAlternateColorCodes('&', MessageFormat.format(plugin.config.getAltCmdPlayerNoAlts(), args[0])));
-                }
+                playerData.ip = player.getAddress().getAddress().getHostAddress().toLowerCase(Locale.ROOT).split("%")[0];
+                playerData.uuid = player.getUniqueId().toString();
+                playerData.name = name;
+                playerDataList.add(playerData);
             }
+            
+            final String altCmdPlayer          = plugin.config.getAltCmdPlayer();
+            final String altCmdPlayerList      = plugin.config.getAltCmdPlayerList();
+            final String altCmdPlayerSeparator = plugin.config.getAltCmdPlayerSeparator();
+            final String altCmdNoAlts          = plugin.config.getAltCmdNoAlts();
+            final String altCmdPlayerNoAlts    = plugin.config.getAltCmdPlayerNoAlts();
+            
+            // Go to async thread
+            Bukkit.getScheduler().runTaskAsynchronously(plugin, new Runnable()
+            {
+                @Override
+                public void run()
+                {
+                    List<String> altStrings = new ArrayList<String>();
+                    // Loop through the list of players
+                    for (PlayerDataType playerData : playerDataList)
+                    {
+                        String altString = plugin.database.getFormattedAltString(playerData.name,
+                                                                                 playerData.ip,
+                                                                                 playerData.uuid,
+                                                                                 altCmdPlayer,
+                                                                                 altCmdPlayerList,
+                                                                                 altCmdPlayerSeparator,
+                                                                                 plugin.expirationTime);
+                        if (altString != null)
+                        {
+                            altStrings.add(altString);
+                        }
+                    }
+                    if (!altStrings.isEmpty())
+                    {
+                        sendMessageSync(sender, altStrings);
+                    }
+                    else
+                    {
+                        if (args.length == 0)
+                        {
+                            // No alts found
+                            sendMessageSync(sender, altCmdNoAlts);
+                        }
+                        else
+                        {
+                            // args[0] has no known alts
+                            sendMessageSync(sender, MessageFormat.format(altCmdPlayerNoAlts, args[0]));
+                        }
+                    }
+                }
+            });
             
             // Normal return
             return true;
@@ -176,51 +229,81 @@ public class Commands implements CommandExecutor
     
     // -------------------------------------------------------------------------
     
-    // Lookup an offline player and report any alts found.
+    // Lookup an offline player and report any alts found. Like onCommand, the
+    // database work is done in an async thread and a method is called to output
+    // the resulting string to the command sender on the main thread.
     
-    private void handleOfflinePlayer(CommandSender sender, String playerName)
+    private void handleOfflinePlayer(final CommandSender sender, final String playerName)
     {
-        // Lookup player; return is IP address, UUID, and name (may be null)
-        PlayerDataType playerData = plugin.dataStore.lookupOfflinePlayer(playerName);
+        final String altCmdPlayer          = plugin.config.getAltCmdPlayer();
+        final String altCmdPlayerList      = plugin.config.getAltCmdPlayerList();
+        final String altCmdPlayerSeparator = plugin.config.getAltCmdPlayerSeparator();
+        final String altCmdPlayerNotFound  = plugin.config.getAltCmdPlayerNotFound();
+        final String altCmdPlayerNoAlts    = plugin.config.getAltCmdPlayerNoAlts();
         
-        if (playerData == null)
+        // Go to async thread
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, new Runnable()
         {
-            // playerName not found
-            sender.sendMessage(ChatColor.translateAlternateColorCodes('&', MessageFormat.format(plugin.config.getAltCmdPlayerNotFound(), playerName)));
-        }
-        else
-        {
-            boolean altsFound = outputAlts(sender, playerData.name, playerData.ip, playerData.uuid);
-            
-            if (!altsFound)
+            @Override
+            public void run()
             {
-                // playerData.name has no known alts
-                sender.sendMessage(ChatColor.translateAlternateColorCodes('&', MessageFormat.format(plugin.config.getAltCmdPlayerNoAlts(), playerData.name)));
+                // Lookup player; return is IP address, UUID, and name (may be null)
+                PlayerDataType playerData = plugin.database.lookupOfflinePlayer(playerName);
+
+                if (playerData == null)
+                {
+                    // playerName not found
+                    sendMessageSync(sender, MessageFormat.format(altCmdPlayerNotFound, playerName));
+                }
+                else
+                {
+                    String altString = plugin.database.getFormattedAltString(playerData.name,
+                                                                             playerData.ip,
+                                                                             playerData.uuid,
+                                                                             altCmdPlayer,
+                                                                             altCmdPlayerList,
+                                                                             altCmdPlayerSeparator,
+                                                                             plugin.expirationTime);
+                    if (altString != null)
+                    {
+                        sendMessageSync(sender, altString);
+                    }
+                    else
+                    {
+                        // playerData.name has no known alts
+                        sendMessageSync(sender, MessageFormat.format(altCmdPlayerNoAlts, playerData.name));
+                    }
+                }
             }
-        }
+        });
     }
     
     // -------------------------------------------------------------------------
     
-    // Output the alts for the given player, if any. Returns true if alts were
-    // found. This is used for both online and offline players.
+    // Switch to the main thread and send a message
     
-    private boolean outputAlts(CommandSender sender, String name, String ip, String uuid)
+    private void sendMessageSync(final CommandSender sender, final String message)
     {
-        // Get possible alts
-        String altString = plugin.dataStore.getFormattedAltString(name,
-                                                                  ip,
-                                                                  uuid,
-                                                                  plugin.config.getAltCmdPlayer(),
-                                                                  plugin.config.getAltCmdPlayerList(),
-                                                                  plugin.config.getAltCmdPlayerSeparator());
-        
-        if (altString != null)
-        {
-            sender.sendMessage(ChatColor.translateAlternateColorCodes('&', altString));
-            return true;
-        }
-        
-        return false;
+        sendMessageSync(sender, new ArrayList<>(Arrays.asList(message)));
     }
+    
+    // -------------------------------------------------------------------------
+    
+    // Switch to the main thread and send a list of messages
+    
+    private void sendMessageSync(final CommandSender sender, final List<String> messages)
+    {
+        // go back to the main thread
+        Bukkit.getScheduler().runTask(plugin, new Runnable()
+        {
+            @Override
+            public void run() {
+                for (String message : messages)
+                {
+                    sender.sendMessage(ChatColor.translateAlternateColorCodes('&', message));
+                }
+            }
+        });
+    }
+    
 }
