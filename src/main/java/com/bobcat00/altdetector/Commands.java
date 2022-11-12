@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -159,14 +158,13 @@ public class Commands implements CommandExecutor
             
             // Lookup alt(s) and output to sender
             
-            // Get ip and uuid for each player while on main thread
+            // Get uuid and name for each player while on main thread
             List<PlayerDataType> playerDataList = new ArrayList<>();
             for (String name : playerList)
             {
                 PlayerDataType playerData = plugin.database.new PlayerDataType();
                 @SuppressWarnings("deprecation")
                 Player player = Bukkit.getServer().getPlayerExact(name);
-                playerData.ip = player.getAddress().getAddress().getHostAddress().toLowerCase(Locale.ROOT).split("%")[0];
                 playerData.uuid = player.getUniqueId().toString();
                 playerData.name = name;
                 playerDataList.add(playerData);
@@ -189,7 +187,6 @@ public class Commands implements CommandExecutor
                     for (PlayerDataType playerData : playerDataList)
                     {
                         String altString = plugin.database.getFormattedAltString(playerData.name,
-                                                                                 playerData.ip,
                                                                                  playerData.uuid,
                                                                                  altCmdPlayer,
                                                                                  altCmdPlayerList,
@@ -247,7 +244,7 @@ public class Commands implements CommandExecutor
             @Override
             public void run()
             {
-                // Lookup player; return is IP address, UUID, and name (may be null)
+                // Lookup player; return is UUID, and name (may be null)
                 PlayerDataType playerData = plugin.database.lookupOfflinePlayer(playerName);
 
                 if (playerData == null)
@@ -258,7 +255,6 @@ public class Commands implements CommandExecutor
                 else
                 {
                     String altString = plugin.database.getFormattedAltString(playerData.name,
-                                                                             playerData.ip,
                                                                              playerData.uuid,
                                                                              altCmdPlayer,
                                                                              altCmdPlayerList,

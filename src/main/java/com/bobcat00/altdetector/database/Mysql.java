@@ -46,7 +46,7 @@ public class Mysql extends Database
         addIpEntry    = "INSERT INTO {prefix}iptable (ipaddr, playerid, date) VALUES (?, (SELECT id FROM {prefix}playertable WHERE uuid = ?), now());";
         updateIpEntry = "UPDATE {prefix}iptable SET date = now() WHERE ipaddr = ? AND playerid = (SELECT id FROM {prefix}playertable WHERE uuid = ?);";
         addIpWithDate = "INSERT INTO {prefix}iptable (ipaddr, playerid, date) VALUES (?, (SELECT id FROM {prefix}playertable WHERE uuid = ?), FROM_UNIXTIME(?));";
-        getAlts       = "SELECT name FROM {prefix}iptable INNER JOIN {prefix}playertable ON {prefix}iptable.playerid = {prefix}playertable.id WHERE ipaddr = ? AND uuid <> ? AND date >= SUBDATE(now(),?) ORDER BY lower(name);";
+        getAlts       = "SELECT DISTINCT name FROM {prefix}iptable INNER JOIN {prefix}playertable ON {prefix}iptable.playerid = {prefix}playertable.id WHERE ipaddr IN (SELECT ipaddr FROM {prefix}iptable INNER JOIN {prefix}playertable ON {prefix}iptable.playerid = {prefix}playertable.id WHERE uuid = ?) AND uuid <> ? AND date >= SUBDATE(now(),?) ORDER BY lower(name);";
         getIptable    = "SELECT ipaddr, uuid, UNIX_TIMESTAMP(date) FROM {prefix}iptable INNER JOIN {prefix}playertable ON {prefix}iptable.playerid = {prefix}playertable.id;";
     }
     

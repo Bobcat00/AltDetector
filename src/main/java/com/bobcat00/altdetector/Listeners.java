@@ -101,7 +101,6 @@ public class Listeners implements Listener
                 // 3. Get possible alts
                 
                 String altString = plugin.database.getFormattedAltString(name,
-                                                                         ip,
                                                                          uuid,
                                                                          joinPlayer,
                                                                          joinPlayerList,

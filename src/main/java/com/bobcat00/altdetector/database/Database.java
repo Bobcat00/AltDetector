@@ -62,8 +62,8 @@ public abstract class Database
     String addIpEntry        = "INSERT INTO {prefix}iptable (ipaddr, playerid, date) VALUES (?, (SELECT id FROM {prefix}playertable WHERE uuid = ?), datetime('now'));";
     String updateIpEntry     = "UPDATE {prefix}iptable SET date = datetime('now') WHERE ipaddr = ? AND playerid = (SELECT id FROM {prefix}playertable WHERE uuid = ?);";
     String addIpWithDate     = "INSERT INTO {prefix}iptable (ipaddr, playerid, date) VALUES (?, (SELECT id FROM {prefix}playertable WHERE uuid = ?), datetime(?, 'unixepoch'));";
-    String getAlts           = "SELECT name FROM {prefix}iptable INNER JOIN {prefix}playertable ON {prefix}iptable.playerid = {prefix}playertable.id WHERE ipaddr = ? AND uuid <> ? AND date >= datetime('now', ?) ORDER BY lower(name);";
-    String getOfflinePlayer  = "SELECT ipaddr, uuid, name FROM {prefix}iptable INNER JOIN {prefix}playertable ON {prefix}iptable.playerid = {prefix}playertable.id WHERE lower(name) = lower(?) ORDER BY date DESC LIMIT 1;";
+    String getAlts           = "SELECT DISTINCT name FROM {prefix}iptable INNER JOIN {prefix}playertable ON {prefix}iptable.playerid = {prefix}playertable.id WHERE ipaddr IN (SELECT ipaddr FROM {prefix}iptable INNER JOIN {prefix}playertable ON {prefix}iptable.playerid = {prefix}playertable.id WHERE uuid = ?) AND uuid <> ? AND date >= datetime('now', ?) ORDER BY lower(name);";
+    String getOfflinePlayer  = "SELECT uuid, name FROM {prefix}iptable INNER JOIN {prefix}playertable ON {prefix}iptable.playerid = {prefix}playertable.id WHERE lower(name) = lower(?) ORDER BY date DESC LIMIT 1;";
     String getPlayertable    = "SELECT name, uuid FROM {prefix}playertable;";
     String getIptable        = "SELECT ipaddr, uuid, strftime('%s',date) FROM {prefix}iptable INNER JOIN {prefix}playertable ON {prefix}iptable.playerid = {prefix}playertable.id;";
     
@@ -502,18 +502,18 @@ public abstract class Database
     
     // -------------------------------------------------------------------------
     
-    // Get list of names, case-insensitive sort, matching ipaddr, excluding
-    // specified uuid, newer than expiration time for online player
+    // Get list of names, case-insensitive sort, matching IP addresses used by
+    // the specified uuid, excluding excludeUuid, and newer than expiration time
     
-    public List<String> getAltNames(String ip, String uuid, int expirationTime)
+    public List<String> getAltNames(String uuid, String excludeUuid, int expirationTime)
     {
         List<String> altList = new ArrayList<String>();
 
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(replacePrefix(getAlts)))
         {
-            stmt.setString(1, ip);
-            stmt.setString(2, uuid);
+            stmt.setString(1, uuid);
+            stmt.setString(2, excludeUuid);
             stmt.setString(3, formatExpirationTime(expirationTime));
             if (debug) {plugin.getLogger().info("Executing statement: " + stmt.toString());}
             ResultSet resultSet = stmt.executeQuery();
@@ -525,7 +525,7 @@ public abstract class Database
         }
         catch (SQLException e)
         {
-            plugin.getLogger().warning("Database error retrieving list of names from playertable for " + ip + " and " + uuid + ": " + e.getMessage());
+            plugin.getLogger().warning("Database error retrieving list of names from playertable for " + uuid + ": " + e.getMessage());
         }
         
         return altList;
@@ -533,18 +533,17 @@ public abstract class Database
     
     // -------------------------------------------------------------------------
     
-    // Class to allow getOfflinePlayer to return three values.
+    // Class to allow getOfflinePlayer to return two values.
     
     public class PlayerDataType
     {
-        public String ip;
         public String uuid;
         public String name;
     }
     
     // -------------------------------------------------------------------------
     
-    // Get ipaddr, uuid, and name for most recent entry for specified player
+    // Get uuid and name for most recent entry for specified player
     
     public PlayerDataType lookupOfflinePlayer(String name)
     {
@@ -560,7 +559,6 @@ public abstract class Database
             if (resultSet.next())
             {
                 playerData = new PlayerDataType();
-                playerData.ip   = resultSet.getString("ipaddr");
                 playerData.uuid = resultSet.getString("uuid");
                 playerData.name = resultSet.getString("name");
             }
@@ -579,7 +577,6 @@ public abstract class Database
     // color codes. If no alts are found, the returned string is null.
     
     public String getFormattedAltString(String name,
-                                        String ip,
                                         String uuid,
                                         String playerFormat,
                                         String playerListFormat,
@@ -587,7 +584,7 @@ public abstract class Database
                                         int expirationTime)
     {
         // Get possible alts
-        List<String> altList = getAltNames(ip, uuid, expirationTime);
+        List<String> altList = getAltNames(uuid, uuid, expirationTime);
         
         if (!altList.isEmpty())
         {
