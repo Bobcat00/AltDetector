@@ -18,7 +18,9 @@ package com.bobcat00.altdetector;
 
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
+import java.io.OutputStreamWriter;
+import java.nio.charset.Charset;
 
 public class Config
 {
@@ -312,7 +314,7 @@ public class Config
         {
             File outFile = new File(plugin.getDataFolder(), "config.yml");
             
-            BufferedWriter writer = new BufferedWriter(new FileWriter(outFile.getAbsolutePath()));
+            BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outFile.getAbsolutePath()), Charset.forName("UTF-8")));
             
             writer.write("# Data expiration time in days"                                    + "\n");
             writer.write("expiration-time: " + plugin.getConfig().getLong("expiration-time") + "\n");
