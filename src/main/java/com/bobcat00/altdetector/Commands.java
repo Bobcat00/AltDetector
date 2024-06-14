@@ -28,6 +28,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.metadata.MetadataValue;
 
 import com.bobcat00.altdetector.database.Database.PlayerDataType;
 
@@ -72,7 +73,9 @@ public class Commands implements CommandExecutor
                 // Get a list of all the players
                 for (Player player : plugin.getServer().getOnlinePlayers())
                 {
-                    if (!player.hasPermission("altdetector.exempt"))
+                    // Include if player is not exempt AND (player is not vanished OR sender has seevanished perm)
+                    if (!player.hasPermission("altdetector.exempt") &&
+                        (!isVanished(player) || sender.hasPermission("altdetector.alt.seevanished")))
                     {
                         playerList.add(player.getName());
                     }
@@ -300,6 +303,26 @@ public class Commands implements CommandExecutor
                 }
             }
         });
+    }
+    
+    // -------------------------------------------------------------------------
+    
+    // Returns true if a player is vanished. This must be called from the main
+    // thread.
+    
+    private boolean isVanished(final Player player)
+    {
+        if (player != null)
+        {
+            for (MetadataValue meta : player.getMetadata("vanished"))
+            {
+                if (meta.asBoolean())
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
     
 }

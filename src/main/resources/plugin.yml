@@ -16,9 +16,15 @@ permissions:
   altdetector.alt.delete:
     description: Allows use of the /alt delete command
     default: op
+  altdetector.alt.seevanished:
+    description: Allows this player to use /alt command to see vanished players
+    default: op
   altdetector.exempt:
     description: Exempts player from data being saved and a lookup being done when joining the server
     default: false
   altdetector.notify:
     description: Notifies this player when an alt is detected
+    default: op
+  altdetector.notify.seevanished:
+    description: Notifies this player when an alt is detected for a vanished player
     default: op

@@ -17,6 +17,7 @@
 package com.bobcat00.altdetector;
 
 import java.util.Locale;
+import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -25,6 +26,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.metadata.MetadataValue;
 
 public class Listeners implements Listener
 {
@@ -42,9 +44,9 @@ public class Listeners implements Listener
     
     // Callback method used for returning alt string to main thread
     
-    private interface Callback<T>
+    private interface Callback<T, U>
     {
-        public void execute(T response);
+        public void execute(T response1, U response2);
     }
     
     // -------------------------------------------------------------------------
@@ -55,7 +57,7 @@ public class Listeners implements Listener
     private void updateDatabaseGetAlts(final String ip,
                                        final String uuid,
                                        final String name,
-                                       final Callback<String> callback)
+                                       final Callback<String, String> callback)
     {
         final String joinPlayer          = plugin.config.getJoinPlayer();
         final String joinPlayerList      = plugin.config.getJoinPlayerList();
@@ -110,15 +112,15 @@ public class Listeners implements Listener
                 if (altString != null)
                 {
                     // Go back to the main thread
-                    Bukkit.getScheduler().runTask(plugin, new Runnable()
+                    Bukkit.getScheduler().runTaskLater(plugin, new Runnable()
                     {
                         @Override
                         public void run()
                         {
                             // Call the callback with the result
-                            callback.execute(altString);
+                            callback.execute(altString, uuid);
                         }
-                    });
+                    }, 2L); // Wait 2 ticks
                 }
             
             }
@@ -151,14 +153,17 @@ public class Listeners implements Listener
         final String name = player.getName();
         
         // Add to the database - async (mostly)
-        updateDatabaseGetAlts(ip, uuid, name, new Callback<String>()
+        updateDatabaseGetAlts(ip, uuid, name, new Callback<String, String>()
         {
-            // Process alt string - main thread
+            // Process alt string - main thread, delayed by 2 ticks
             @Override
-            public void execute(String altString)
+            public void execute(String altString, final String uuid)
             {
                 // Output to log file without color codes
                 plugin.getLogger().info(altString.replaceAll("&[0123456789AaBbCcDdEeFfKkLlMmNnOoRr]", ""));
+                
+                // Get joining player's vanish state
+                boolean vanished = isVanished(uuid);
 
                 // Output including prefix to players with altdetector.notify
                 String notifyString = ChatColor.translateAlternateColorCodes('&', plugin.config.getJoinPlayerPrefix() + altString);
@@ -167,12 +172,47 @@ public class Listeners implements Listener
                 {
                     if (p.hasPermission("altdetector.notify"))
                     {
-                        p.sendMessage(notifyString);
+                        // Output if player is not vanished OR recipient has seevanished perm
+                        if (!vanished || p.hasPermission("altdetector.notify.seevanished"))
+                        {
+                            p.sendMessage(notifyString);
+                        }
+                    }
+                }
+            
+            }
+        }
+        );
+    }
+    
+    // -------------------------------------------------------------------------
+    
+    // Returns true if a player is vanished. This should be checked at least
+    // 2 ticks after the player joins, to allow plugins to set the vanished
+    // state. This must be called from the main thread.
+    
+    private boolean isVanished(final String uuid)
+    {
+        try {
+            final Player player = Bukkit.getPlayer(UUID.fromString(uuid));
+
+            if (player != null)
+            {
+                for (MetadataValue meta : player.getMetadata("vanished"))
+                {
+                    if (meta.asBoolean())
+                    {
+                        return true;
                     }
                 }
             }
         }
-        );
+        catch(IllegalArgumentException exception)
+        {
+            return false; // Bad UUID string
+        }
+
+        return false;
     }
 
 }
