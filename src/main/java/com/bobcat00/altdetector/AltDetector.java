@@ -35,6 +35,7 @@ public class AltDetector extends JavaPlugin
     public Config config;
     Database database;
     Listeners listeners;
+    boolean superVanish = false;
     
     @Override
     public void onEnable()
@@ -111,6 +112,14 @@ public class AltDetector extends JavaPlugin
         this.getCommand("alt").setExecutor(new Commands(this));
         this.getCommand("alt").setTabCompleter(new TabComplete(this));
         
+        // Check for PremiumVanish and SuperVanish
+        
+        if (Bukkit.getPluginManager().isPluginEnabled("PremiumVanish") || Bukkit.getPluginManager().isPluginEnabled("SuperVanish"))
+        {
+            superVanish = true;
+            getLogger().info("PremiumVanish/SuperVanish integration enabled.");
+        }
+        
         // Metrics
         
         int pluginId = 4862;
@@ -131,8 +140,8 @@ public class AltDetector extends JavaPlugin
             option = ">90";
         final String setting = option;
         metrics.addCustomChart(new SimplePie("expiration_time", () -> setting));
-        
-        metrics.addCustomChart(new SimplePie("database_type", () -> database.toString()));
+        metrics.addCustomChart(new SimplePie("database_type",   () -> database.toString()));
+        metrics.addCustomChart(new SimplePie("supervanish",     () -> superVanish ? "Yes" : "No"));
 
         getLogger().info("Metrics enabled if allowed by plugins/bStats/config.yml");
     }

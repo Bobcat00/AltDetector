@@ -28,6 +28,8 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.metadata.MetadataValue;
 
+import de.myzelyam.api.vanish.VanishAPI;
+
 public class Listeners implements Listener
 {
     private AltDetector plugin;
@@ -159,11 +161,19 @@ public class Listeners implements Listener
             @Override
             public void execute(String altString, final String uuid)
             {
+                // Player object for uuid, null if not found or invalid
+                Player player = null;
+                try
+                {
+                    player = Bukkit.getPlayer(UUID.fromString(uuid));
+                }
+                catch(IllegalArgumentException exception)
+                {
+                    // Bad UUID string
+                }
+
                 // Output to log file without color codes
                 plugin.getLogger().info(altString.replaceAll("&[0123456789AaBbCcDdEeFfKkLlMmNnOoRr]", ""));
-                
-                // Get joining player's vanish state
-                boolean vanished = isVanished(uuid);
 
                 // Output including prefix to players with altdetector.notify
                 String notifyString = ChatColor.translateAlternateColorCodes('&', plugin.config.getJoinPlayerPrefix() + altString);
@@ -172,14 +182,14 @@ public class Listeners implements Listener
                 {
                     if (p.hasPermission("altdetector.notify"))
                     {
-                        // Output if player is not vanished OR recipient has seevanished perm
-                        if (!vanished || p.hasPermission("altdetector.notify.seevanished"))
+                        // Output if recipient has seevanished perm OR player is not vanished 
+                        if (p.hasPermission("altdetector.notify.seevanished") || !isVanished(player, p))
                         {
                             p.sendMessage(notifyString);
                         }
                     }
                 }
-            
+
             }
         }
         );
@@ -190,14 +200,18 @@ public class Listeners implements Listener
     // Returns true if a player is vanished. This should be checked at least
     // 2 ticks after the player joins, to allow plugins to set the vanished
     // state. This must be called from the main thread.
+    //
+    // The second parameter is the player that will receive the alt notification
+    // message, and is only used if SuperVanish/PremiumVanish is present. In
+    // this case, true is returned if player is not visible to recipient.
     
-    private boolean isVanished(final String uuid)
+    private boolean isVanished(final Player player, final Player recipient)
     {
-        try {
-            final Player player = Bukkit.getPlayer(UUID.fromString(uuid));
-
-            if (player != null)
+        if (player != null)
+        {
+            if (!plugin.superVanish)
             {
+                // Normal processing
                 for (MetadataValue meta : player.getMetadata("vanished"))
                 {
                     if (meta.asBoolean())
@@ -206,10 +220,13 @@ public class Listeners implements Listener
                     }
                 }
             }
-        }
-        catch(IllegalArgumentException exception)
-        {
-            return false; // Bad UUID string
+            else
+            {
+                // SuperVanish/PremiumVanish processing
+                // canSee returns true if recipient is allowed to see player
+                // So !canSee is vanished
+                return (!VanishAPI.canSee(recipient, player));
+            }
         }
 
         return false;

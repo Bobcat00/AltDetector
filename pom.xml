@@ -64,6 +64,11 @@
       <id>spigot-repo</id>
       <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
     </repository>
+    <!-- SuperVanish -->
+    <repository>
+      <id>jitpack.io</id>
+      <url>https://jitpack.io</url>
+    </repository>
   </repositories>
   <dependencies>
     <dependency>
@@ -79,6 +84,13 @@
       <artifactId>HikariCP</artifactId>
       <version>4.0.3</version>
       <scope>compile</scope>
+    </dependency>
+    <!-- SuperVanish -->
+    <dependency>
+      <groupId>com.github.LeonMangler</groupId>
+      <artifactId>SuperVanish</artifactId>
+      <version>6.2.18-3</version>
+      <scope>provided</scope>
     </dependency>
     <!--  bStats -->
     <dependency>

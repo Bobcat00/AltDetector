@@ -32,6 +32,8 @@ import org.bukkit.metadata.MetadataValue;
 
 import com.bobcat00.altdetector.database.Database.PlayerDataType;
 
+import de.myzelyam.api.vanish.VanishAPI;
+
 public class Commands implements CommandExecutor
 {
     private AltDetector plugin;
@@ -73,9 +75,9 @@ public class Commands implements CommandExecutor
                 // Get a list of all the players
                 for (Player player : plugin.getServer().getOnlinePlayers())
                 {
-                    // Include if player is not exempt AND (player is not vanished OR sender has seevanished perm)
+                    // Include if player is not exempt AND (sender has seevanished perm OR player is not vanished)
                     if (!player.hasPermission("altdetector.exempt") &&
-                        (!isVanished(player) || sender.hasPermission("altdetector.alt.seevanished")))
+                        (sender.hasPermission("altdetector.alt.seevanished") || !isVanished(player, sender)))
                     {
                         playerList.add(player.getName());
                     }
@@ -310,17 +312,29 @@ public class Commands implements CommandExecutor
     // Returns true if a player is vanished. This must be called from the main
     // thread.
     
-    private boolean isVanished(final Player player)
+    private boolean isVanished(final Player player, final CommandSender sender)
     {
-        if (player != null)
+        if (!plugin.superVanish || !(sender instanceof Player))
         {
-            for (MetadataValue meta : player.getMetadata("vanished"))
+            // Normal processing
+            
+            if (player != null)
             {
-                if (meta.asBoolean())
+                for (MetadataValue meta : player.getMetadata("vanished"))
                 {
-                    return true;
+                    if (meta.asBoolean())
+                    {
+                        return true;
+                    }
                 }
             }
+        }
+        else
+        {
+            // SuperVanish/PremiumVanish processing
+            // canSee returns true if sender is allowed to see player
+            // So !canSee is vanished
+            return (!VanishAPI.canSee((Player)sender, player));
         }
         return false;
     }
