@@ -173,7 +173,8 @@ public class Listeners implements Listener
                 }
 
                 // Output to log file without color codes
-                plugin.getLogger().info(altString.replaceAll("&[0123456789AaBbCcDdEeFfKkLlMmNnOoRr]", ""));
+                String cleanAltString = altString.replaceAll("&[0123456789AaBbCcDdEeFfKkLlMmNnOoRr]", "");
+                plugin.getLogger().info(cleanAltString);
 
                 // Output including prefix to players with altdetector.notify
                 String notifyString = ChatColor.translateAlternateColorCodes('&', plugin.config.getJoinPlayerPrefix() + altString);
@@ -190,6 +191,10 @@ public class Listeners implements Listener
                     }
                 }
 
+                // Send to Discord webhook if enabled
+                if (plugin.config.isDiscordEnabled() && plugin.discordWebhook != null && player != null) {
+                    plugin.discordWebhook.sendAltMessage(cleanAltString, player.getName());
+                }
             }
         }
         );

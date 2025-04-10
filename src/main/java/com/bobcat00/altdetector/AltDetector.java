@@ -36,6 +36,7 @@ public class AltDetector extends JavaPlugin
     Database database;
     Listeners listeners;
     boolean superVanish = false;
+    public DiscordWebhook discordWebhook;
     
     @Override
     public void onEnable()
@@ -118,6 +119,16 @@ public class AltDetector extends JavaPlugin
         {
             superVanish = true;
             getLogger().info("PremiumVanish/SuperVanish integration enabled.");
+        }
+        
+        // Initialize Discord webhook
+        if (config.isDiscordEnabled()) {
+            if (config.getDiscordWebhookUrl() != null && !config.getDiscordWebhookUrl().isEmpty()) {
+                discordWebhook = new DiscordWebhook(this);
+                getLogger().info("Discord webhook integration enabled.");
+            } else {
+                getLogger().warning("Discord webhook is enabled but no URL is provided in the config.");
+            }
         }
         
         // Metrics
