@@ -4,7 +4,7 @@
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
+// (at any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -16,7 +16,6 @@
 
 package com.bobcat00.altdetector;
 
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.regex.Matcher;
@@ -26,7 +25,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 
-import com.bobcat00.altdetector.database.Database;
+import com.bobcat00.altdetector.database.Database.PlayerDataType;
 
 /**
  * PlaceholderAPI integration for AltDetector
@@ -118,14 +117,14 @@ public class AltDetectorPlaceholder extends me.clip.placeholderapi.expansion.Pla
      * @return The player's UUID as a string, or null if not found
      */
     private String findPlayerUuid(String playerName, CompletableFuture<String> future) {
-        // Try to find from online players first
+        // Try to find from online players first (using non-deprecated method)
         Player onlinePlayer = Bukkit.getPlayer(playerName);
         if (onlinePlayer != null) {
             return onlinePlayer.getUniqueId().toString();
         }
         
         // Try to find from database
-        Database.PlayerDataType playerData = plugin.database.lookupOfflinePlayer(playerName);
+        PlayerDataType playerData = plugin.database.lookupOfflinePlayer(playerName);
         if (playerData == null || playerData.uuid == null || playerData.uuid.isEmpty()) {
             // Player not found
             future.complete("Player not found");

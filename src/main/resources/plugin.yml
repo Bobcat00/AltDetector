@@ -29,3 +29,5 @@ permissions:
   altdetector.notify.seevanished:
     description: Notifies this player when an alt is detected for a vanished player
     default: op
+# PlaceholderAPI placeholders:
+# %altdetector_alts_{PlayerName}% - Returns a comma-separated list of alt accounts for the specified player
