@@ -83,6 +83,11 @@
       <id>jitpack.io</id>
       <url>https://jitpack.io</url>
     </repository>
+    <!-- PlaceholderAPI -->
+    <repository>
+      <id>placeholderapi</id>
+      <url>https://repo.extendedclip.com/releases/</url>
+    </repository>
   </repositories>
   <dependencies>
     <dependency>
@@ -112,6 +117,13 @@
       <artifactId>bstats-bukkit</artifactId>
       <version>3.0.2</version>
       <scope>compile</scope>
+    </dependency>
+    <!-- PlaceholderAPI -->
+    <dependency>
+      <groupId>me.clip</groupId>
+      <artifactId>placeholderapi</artifactId>
+      <version>2.11.6</version>
+      <scope>provided</scope>
     </dependency>
   </dependencies>
 </project>
