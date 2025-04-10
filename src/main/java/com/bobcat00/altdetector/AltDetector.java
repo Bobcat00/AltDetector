@@ -131,6 +131,12 @@ public class AltDetector extends JavaPlugin
             }
         }
         
+        // Register PlaceholderAPI expansion if available
+        if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
+            new AltDetectorPlaceholder(this).register();
+            getLogger().info("PlaceholderAPI integration enabled.");
+        }
+        
         // Metrics
         
         int pluginId = 4862;

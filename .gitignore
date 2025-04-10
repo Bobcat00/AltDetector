@@ -15,3 +15,7 @@
 log/
 target/
 dependency-reduced-pom.xml
+
+# VsCode
+.vscode/
+.vscode-test/
