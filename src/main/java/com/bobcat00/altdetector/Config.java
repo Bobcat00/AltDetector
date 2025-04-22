@@ -386,19 +386,24 @@ public class Config
             writer.write("  port: "                + plugin.getConfig().getInt   ("mysql.port")                     + "\n");
             writer.write("  jdbcurl-properties: '" + plugin.getConfig().getString("mysql.jdbcurl-properties") + "'" + "\n");
             writer.write("# Messages when player joins the server"                                                                                + "\n");
-            writer.write("join-player-prefix: \""      + plugin.getConfig().getString("join-player-prefix").replace("\n", "\\\\n")      + "\"" + "\n");
-            writer.write("join-player: \""             + plugin.getConfig().getString("join-player").replace("\n", "\\\\n")             + "\"" + "\n");
-            writer.write("join-player-list: \""        + plugin.getConfig().getString("join-player-list").replace("\n", "\\\\n")        + "\"" + "\n");
-            writer.write("join-player-separator: \""   + plugin.getConfig().getString("join-player-separator").replace("\n", "\\\\n")   + "\"" + "\n");
+            writer.write("join-player-prefix: \""      + plugin.getConfig().getString("join-player-prefix").replaceAll("\n", "\\\\n")      + "\"" + "\n");
+            writer.write("join-player: \""             + plugin.getConfig().getString("join-player").replaceAll("\n", "\\\\n")             + "\"" + "\n");
+            writer.write("join-player-list: \""        + plugin.getConfig().getString("join-player-list").replaceAll("\n", "\\\\n")        + "\"" + "\n");
+            writer.write("join-player-separator: \""   + plugin.getConfig().getString("join-player-separator").replaceAll("\n", "\\\\n")   + "\"" + "\n");
             writer.write("\n");
 
             writer.write("# Messages for alt command"                                                                                             + "\n");
             writer.write("altcmd-player: \""           + plugin.getConfig().getString("altcmd-player").replace("\n", "\\\\n")           + "\"" + "\n");
             writer.write("altcmd-player-list: \""      + plugin.getConfig().getString("altcmd-player-list").replace("\n", "\\\\n")      + "\"" + "\n");
             writer.write("altcmd-player-separator: \"" + plugin.getConfig().getString("altcmd-player-separator").replace("\n", "\\\\n") + "\"" + "\n");
+            writer.write("altcmd-playernoalts: \""     + plugin.getConfig().getString("altcmd-playernoalts").replaceAll("\n", "\\\\n")     + "\"" + "\n");
+            writer.write("altcmd-noalts: \""           + plugin.getConfig().getString("altcmd-noalts").replaceAll("\n", "\\\\n")           + "\"" + "\n");
+            writer.write("altcmd-playernotfound: \""   + plugin.getConfig().getString("altcmd-playernotfound").replaceAll("\n", "\\\\n")   + "\"" + "\n");
+            writer.write("altcmd-paramerror: \""       + plugin.getConfig().getString("altcmd-paramerror").replaceAll("\n", "\\\\n")       + "\"" + "\n");
+            writer.write("altcmd-noperm: \""           + plugin.getConfig().getString("altcmd-noperm").replaceAll("\n", "\\\\n")           + "\"" + "\n");
             writer.write("\n");
             
-            writer.write("altcmd-playernoalts: \""     + plugin.getConfig().getString("altcmd-playernoalts").replace("\n", "\\\\n")     + "\"" + "\n");
+           
             writer.write("#Messages for alt delete command"                                                                                       + "\n");
             writer.write(DELCMD_REMOVEDSINGULAR_FORMAT  + plugin.getConfig().getString("delcmd-removedsingular").replace("\n", "\\\\n")  + "\"" + "\n");
             writer.write(DELCMD_REMOVEDPLURAL_FORMAT    + plugin.getConfig().getString("delcmd-removedplural").replace("\n", "\\\\n")    + "\"" + "\n");

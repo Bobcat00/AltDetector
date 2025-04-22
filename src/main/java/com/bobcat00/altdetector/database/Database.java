@@ -692,30 +692,4 @@ public abstract class Database
         
         return iptable;
     }
-    
-    // -------------------------------------------------------------------------
-    
-    /**
-     * Get a player's UUID from their name
-     * 
-     * @param name The player's name
-     * @return The UUID as a string, or empty string if not found
-     */
-    public String getUuidFromName(String name) {
-        try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(
-                 "SELECT uuid FROM " + replacePrefix("playertable") + " WHERE name = ?")) {
-            
-            ps.setString(1, name);
-            ResultSet rs = ps.executeQuery();
-            
-            if (rs.next()) {
-                return rs.getString("uuid");
-            }
-            return "";
-        } catch (SQLException e) {
-            plugin.getLogger().warning("Database error retrieving UUID from playertable for " + name + ": " + e.getMessage());
-            return "";
-        }
-    }
 }

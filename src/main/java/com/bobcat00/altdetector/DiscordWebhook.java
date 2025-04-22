@@ -58,9 +58,6 @@ public class DiscordWebhook {
             return;
         }
         
-        // Remove color codes from content
-        final String cleanContent = content.replaceAll("&[0123456789AaBbCcDdEeFfKkLlMmNnOoRr]", "");
-        
         // Run async to not block the main thread
         Bukkit.getScheduler().runTaskAsynchronously(plugin, new Runnable() {
             @Override
@@ -82,7 +79,7 @@ public class DiscordWebhook {
                     // Create embed
                     Map<String, Object> embed = new HashMap<>();
                     embed.put("title", "Alt Account Detection");
-                    embed.put("description", cleanContent);
+                    embed.put("description", content);
                     embed.put("color", embedColor);
                     
                     // Add author (player) info

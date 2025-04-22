@@ -30,7 +30,7 @@ import com.bobcat00.altdetector.database.Database.PlayerDataType;
 /**
  * PlaceholderAPI integration for AltDetector
  */
-public class AltDetectorPlaceholder extends me.clip.placeholderapi.expansion.PlaceholderExpansion {
+public class Placeholder extends me.clip.placeholderapi.expansion.PlaceholderExpansion {
     
     private final AltDetector plugin;
     private static final Pattern ALT_PATTERN = Pattern.compile("alts_(.+)");
@@ -40,7 +40,7 @@ public class AltDetectorPlaceholder extends me.clip.placeholderapi.expansion.Pla
      * 
      * @param plugin The AltDetector plugin instance
      */
-    public AltDetectorPlaceholder(AltDetector plugin) {
+    public Placeholder(AltDetector plugin) {
         this.plugin = plugin;
     }
     
@@ -118,7 +118,7 @@ public class AltDetectorPlaceholder extends me.clip.placeholderapi.expansion.Pla
      */
     private String findPlayerUuid(String playerName, CompletableFuture<String> future) {
         // Try to find from online players first (using non-deprecated method)
-        Player onlinePlayer = Bukkit.getPlayer(playerName);
+        Player onlinePlayer = Bukkit.getServer().getPlayerExact(playerName);
         if (onlinePlayer != null) {
             return onlinePlayer.getUniqueId().toString();
         }
