@@ -10,7 +10,7 @@ mysql:
   database: databasename
   prefix: altdetector_
   port: 3306
-  jdbcurl-properties: ""
+  jdbcurl-properties: ''
 
 # Convert from yml, sqlite, mysql, none (normally handled automatically)
 convert-from: none

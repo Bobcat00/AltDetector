@@ -16,6 +16,7 @@
 
 package com.bobcat00.altdetector;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.regex.Matcher;
@@ -83,24 +84,26 @@ public class Placeholder extends me.clip.placeholderapi.expansion.PlaceholderExp
      * @return A comma-separated list of alt accounts, or "None" if no alts found
      */
     private String getAltsForPlayer(String playerName) {
-        // Create a future to get the result from async operation
         CompletableFuture<String> future = new CompletableFuture<>();
-        
-        // Run database operation async
+
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             String uuid = findPlayerUuid(playerName, future);
             if (uuid == null) {
-                return; // Future already completed with error message
+                return;
             }
-            
-            processAltList(playerName, uuid, future);
+
+            List<String> altNames = plugin.database.getAltNames(uuid, uuid, plugin.expirationTime);
+            if (altNames.isEmpty()) {
+                future.complete("None");
+            } else {
+                future.complete(String.join(", ", altNames));
+            }
         });
-        
+
         try {
-            // Wait for the future to complete and get the result
             return future.get();
         } catch (InterruptedException e) {
-            Thread.currentThread().interrupt(); // Properly re-interrupt
+            Thread.currentThread().interrupt();
             plugin.getLogger().warning("Interrupted while getting alt list for placeholder: " + e.getMessage());
             return "Error";
         } catch (ExecutionException e) {
@@ -132,49 +135,5 @@ public class Placeholder extends me.clip.placeholderapi.expansion.PlaceholderExp
         }
         
         return playerData.uuid;
-    }
-    
-    /**
-     * Process the alt list for a player
-     * 
-     * @param playerName The player's name
-     * @param uuid The player's UUID
-     * @param future The future to complete with result
-     */
-    private void processAltList(String playerName, String uuid, CompletableFuture<String> future) {
-        // Get formatted alt string from database
-        String altCmdPlayer = plugin.config.getAltCmdPlayer();
-        String altCmdPlayerList = plugin.config.getAltCmdPlayerList();
-        String altCmdPlayerSeparator = plugin.config.getAltCmdPlayerSeparator();
-        
-        String altString = plugin.database.getFormattedAltString(
-            playerName, 
-            uuid, 
-            altCmdPlayer, 
-            altCmdPlayerList, 
-            altCmdPlayerSeparator, 
-            plugin.expirationTime
-        );
-        
-        if (altString == null || altString.isEmpty()) {
-            future.complete("None");
-            return;
-        }
-        
-        // Extract just the names from the formatted string
-        // The pattern is typically: "{0} may be an alt of name1, name2, name3"
-        int startIndex = altString.indexOf("alt of ");
-        if (startIndex != -1) {
-            startIndex += 7; // Length of "alt of "
-            String altNames = altString.substring(startIndex).trim();
-            
-            // Remove any color codes
-            altNames = altNames.replaceAll("&[0-9a-fA-FkKlLmMnNoOrR]", "");
-            
-            future.complete(altNames);
-        } else {
-            // Fallback in case format changes
-            future.complete(altString.replaceAll("&[0-9a-fA-FkKlLmMnNoOrR]", ""));
-        }
     }
 }
