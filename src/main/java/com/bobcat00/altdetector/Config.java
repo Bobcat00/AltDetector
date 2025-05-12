@@ -26,20 +26,6 @@ public class Config
 {
     private AltDetector plugin;
     
-    // Constants for configuration keys
-    private static final String DISCORD_ENABLED = "discord.enabled";
-    private static final String DISCORD_WEBHOOK_URL = "discord.webhook-url";
-    private static final String DISCORD_USERNAME = "discord.username";
-    private static final String DISCORD_AVATAR_URL = "discord.avatar-url";
-    private static final String DISCORD_EMBED_COLOR = "discord.embed-color";
-    private static final String DISCORD_NOTIFY_NO_ALTS = "discord.notify-no-alts";
-    
-    // Constants for config writing
-    private static final String ALTCMD_PLAYERNOTFOUND_FORMAT = "altcmd-playernotfound: \"";
-    private static final String ALTCMD_PARAMERROR_FORMAT = "altcmd-paramerror: \"";
-    private static final String DELCMD_REMOVEDSINGULAR_FORMAT = "delcmd-removedsingular: \"";
-    private static final String DELCMD_REMOVEDPLURAL_FORMAT = "delcmd-removedplural: \"";
-    
     public Config(AltDetector plugin)
     {
         this.plugin = plugin;
@@ -190,6 +176,7 @@ public class Config
     {
         return plugin.getConfig().getString("delcmd-removedsingular");
     }
+    
     public String getDelCmdRemovedPlural()
     {
         return plugin.getConfig().getString("delcmd-removedplural");
@@ -197,43 +184,27 @@ public class Config
     
     public boolean isDiscordEnabled()
     {
-        return plugin.getConfig().getBoolean(DISCORD_ENABLED);
+        return plugin.getConfig().getBoolean("discord.enabled");
     }
     
     public String getDiscordWebhookUrl()
     {
-        return plugin.getConfig().getString(DISCORD_WEBHOOK_URL);
+        return plugin.getConfig().getString("discord.webhook-url");
     }
     
     public String getDiscordUsername()
     {
-        return plugin.getConfig().getString(DISCORD_USERNAME);
+        return plugin.getConfig().getString("discord.username");
     }
     
     public String getDiscordAvatarUrl()
     {
-        return plugin.getConfig().getString(DISCORD_AVATAR_URL);
+        return plugin.getConfig().getString("discord.avatar-url");
     }
     
     public int getDiscordEmbedColor()
     {
-        String colorStr = plugin.getConfig().getString(DISCORD_EMBED_COLOR);
-        if (colorStr != null && colorStr.startsWith("#")) {
-            try {
-                // Parse hex color code
-                return Integer.parseInt(colorStr.substring(1), 16);
-            } catch (NumberFormatException e) {
-                // If parsing fails, return default red color
-                return 16711680; // Default red color (decimal value of #FF0000)
-            }
-        }
-        // If not a hex code, treat as a direct integer value
-        return plugin.getConfig().getInt(DISCORD_EMBED_COLOR, 16711680);
-    }
-    
-    public boolean getDiscordNotifyNoAlts()
-    {
-        return plugin.getConfig().getBoolean(DISCORD_NOTIFY_NO_ALTS);
+        return plugin.getConfig().getInt("discord.embed-color", 0xff0000);
     }
     
     //--------------------------------------------------------------------------
@@ -345,19 +316,27 @@ public class Config
         
         if (!contains("delcmd-removedsingular", true))
         {
-            plugin.getConfig().set("delcmd-removedsingular", "&6Removed &c{0}&6 IP address");
+            plugin.getConfig().set("delcmd-removedsingular", "&6{0} record removed");
         }
         
-        if (!contains(DISCORD_ENABLED, true))
+        if (!contains("delcmd-removedplural", true))
         {
-            plugin.getConfig().set(DISCORD_ENABLED, false);
-            plugin.getConfig().set(DISCORD_WEBHOOK_URL, "");
-            plugin.getConfig().set(DISCORD_USERNAME, "AltDetector");
-            plugin.getConfig().set(DISCORD_AVATAR_URL, "");
-            plugin.getConfig().set(DISCORD_EMBED_COLOR, "#FF0000");
-            plugin.getConfig().set(DISCORD_NOTIFY_NO_ALTS, false);
+            plugin.getConfig().set("delcmd-removedplural", "&6{0} records removed");
         }
+        
+        if (!contains("discord.enabled", true))
+        {
+            plugin.getConfig().set("discord.enabled",        false);
+            plugin.getConfig().set("discord.webhook-url",    "");
+            plugin.getConfig().set("discord.username",       "AltDetector");
+            plugin.getConfig().set("discord.avatar-url",     "");
+            plugin.getConfig().set("discord.embed-color",    0xff0000);
         }
+        
+        saveConfig();
+    }
+    
+    //--------------------------------------------------------------------------
     
     // Save config to disk with embedded comments. Any change to the config file
     // format must also be changed here. Newlines are written as \n so they will
@@ -385,6 +364,14 @@ public class Config
             writer.write("  prefix: "              + plugin.getConfig().getString("mysql.prefix")                   + "\n");
             writer.write("  port: "                + plugin.getConfig().getInt   ("mysql.port")                     + "\n");
             writer.write("  jdbcurl-properties: '" + plugin.getConfig().getString("mysql.jdbcurl-properties") + "'" + "\n");
+            writer.write("\n");
+            
+            writer.write("# Convert from none, yml, sqlite, mysql (normally handled automatically)"   + "\n");
+            writer.write("convert-from: "              + plugin.getConfig().getString("convert-from") + "\n");
+            writer.write("# Debug SQL statements"                                                     + "\n");
+            writer.write("sql-debug: "                 + plugin.getConfig().getBoolean("sql-debug")   + "\n");
+            writer.write("\n");
+            
             writer.write("# Messages when player joins the server"                                                                                + "\n");
             writer.write("join-player-prefix: \""      + plugin.getConfig().getString("join-player-prefix").replaceAll("\n", "\\\\n")      + "\"" + "\n");
             writer.write("join-player: \""             + plugin.getConfig().getString("join-player").replaceAll("\n", "\\\\n")             + "\"" + "\n");
@@ -393,9 +380,11 @@ public class Config
             writer.write("\n");
 
             writer.write("# Messages for alt command"                                                                                             + "\n");
-            writer.write("altcmd-player: \""           + plugin.getConfig().getString("altcmd-player").replace("\n", "\\\\n")           + "\"" + "\n");
-            writer.write("altcmd-player-list: \""      + plugin.getConfig().getString("altcmd-player-list").replace("\n", "\\\\n")      + "\"" + "\n");
-            writer.write("altcmd-player-separator: \"" + plugin.getConfig().getString("altcmd-player-separator").replace("\n", "\\\\n") + "\"" + "\n");
+            writer.write("altcmd-player: \""           + plugin.getConfig().getString("altcmd-player").replaceAll("\n", "\\\\n")           + "\"" + "\n");
+            writer.write("altcmd-player-list: \""      + plugin.getConfig().getString("altcmd-player-list").replaceAll("\n", "\\\\n")      + "\"" + "\n");
+            writer.write("altcmd-player-separator: \"" + plugin.getConfig().getString("altcmd-player-separator").replaceAll("\n", "\\\\n") + "\"" + "\n");
+            writer.write("\n");
+            
             writer.write("altcmd-playernoalts: \""     + plugin.getConfig().getString("altcmd-playernoalts").replaceAll("\n", "\\\\n")     + "\"" + "\n");
             writer.write("altcmd-noalts: \""           + plugin.getConfig().getString("altcmd-noalts").replaceAll("\n", "\\\\n")           + "\"" + "\n");
             writer.write("altcmd-playernotfound: \""   + plugin.getConfig().getString("altcmd-playernotfound").replaceAll("\n", "\\\\n")   + "\"" + "\n");
@@ -403,30 +392,22 @@ public class Config
             writer.write("altcmd-noperm: \""           + plugin.getConfig().getString("altcmd-noperm").replaceAll("\n", "\\\\n")           + "\"" + "\n");
             writer.write("\n");
             
-           
             writer.write("#Messages for alt delete command"                                                                                       + "\n");
-            writer.write(DELCMD_REMOVEDSINGULAR_FORMAT  + plugin.getConfig().getString("delcmd-removedsingular").replace("\n", "\\\\n")  + "\"" + "\n");
-            writer.write(DELCMD_REMOVEDPLURAL_FORMAT    + plugin.getConfig().getString("delcmd-removedplural").replace("\n", "\\\\n")    + "\"" + "\n");
-            writer.write(ALTCMD_PLAYERNOTFOUND_FORMAT   + plugin.getConfig().getString("altcmd-playernotfound").replace("\n", "\\\\n")   + "\"" + "\n");
-            writer.write(ALTCMD_PARAMERROR_FORMAT       + plugin.getConfig().getString("altcmd-paramerror").replace("\n", "\\\\n")       + "\"" + "\n");
-            writer.write("# Discord webhook integration"                                                     + "\n");
-            writer.write("# Discord webhook integration"                                                     + "\n");
-            writer.write(DELCMD_REMOVEDSINGULAR_FORMAT  + plugin.getConfig().getString("delcmd-removedsingular").replace("\n", "\\\\n")  + "\"" + "\n");
-            writer.write(DELCMD_REMOVEDPLURAL_FORMAT    + plugin.getConfig().getString("delcmd-removedplural").replace("\n", "\\\\n")    + "\"" + "\n");
-            writer.write(ALTCMD_PLAYERNOTFOUND_FORMAT   + plugin.getConfig().getString("altcmd-playernotfound").replace("\n", "\\\\n")   + "\"" + "\n");
-            writer.write(ALTCMD_PARAMERROR_FORMAT       + plugin.getConfig().getString("altcmd-paramerror").replace("\n", "\\\\n")       + "\"" + "\n");
-            writer.write("# Discord webhook integration"                                                     + "\n");
-            writer.write("discord:"                                                                          + "\n");
-            writer.write("  enabled: "           + plugin.getConfig().getBoolean(DISCORD_ENABLED)            + "\n");
-            writer.write("  webhook-url: '"      + plugin.getConfig().getString(DISCORD_WEBHOOK_URL)        + "'" + "\n");
-            writer.write("  username: '"         + plugin.getConfig().getString(DISCORD_USERNAME)           + "'" + "\n");
-            writer.write("  avatar-url: '"       + plugin.getConfig().getString(DISCORD_AVATAR_URL)         + "'" + "\n");
-            writer.write("  embed-color: '"      + plugin.getConfig().getString(DISCORD_EMBED_COLOR)        + "'" + "\n");
-            writer.write("  # Set to true to include all alts, false to only notify when alts are detected"  + "\n");
-            writer.write("  notify-no-alts: "    + plugin.getConfig().getBoolean(DISCORD_NOTIFY_NO_ALTS)    + "\n");
+            writer.write("delcmd-removedsingular: \""  + plugin.getConfig().getString("delcmd-removedsingular").replaceAll("\n", "\\\\n")  + "\"" + "\n");
+            writer.write("delcmd-removedplural: \""    + plugin.getConfig().getString("delcmd-removedplural").replaceAll("\n", "\\\\n")    + "\"" + "\n");
+            writer.write("\n");
+            
+            writer.write("#Discord webhook integration"                                                                         + "\n");
+            writer.write("discord:"                                                                                             + "\n");
+            writer.write("  enabled: "        + plugin.getConfig().getBoolean("discord.enabled")                                + "\n");
+            writer.write("  webhook-url: '"   + plugin.getConfig().getString("discord.webhook-url")                       + "'" + "\n");
+            writer.write("  username: "       + plugin.getConfig().getString("discord.username")                                + "\n");
+            writer.write("  avatar-url: '"    + plugin.getConfig().getString("discord.avatar-url")                        + "'" + "\n");
+            writer.write("  embed-color: "    + String.format("0x%06x", plugin.getConfig().getInt("discord.embed-color"))       + "\n");
+            
             writer.close();
         }
-        catch (Exception e)
+        catch(Exception e)
         {
             e.printStackTrace();
             //plugin.getLogger().info("Exception creating config file.");

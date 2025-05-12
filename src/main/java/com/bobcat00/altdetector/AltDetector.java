@@ -122,19 +122,17 @@ public class AltDetector extends JavaPlugin
         }
         
         // Initialize Discord webhook
-        if (config.isDiscordEnabled()) {
-            if (config.getDiscordWebhookUrl() != null && !config.getDiscordWebhookUrl().isEmpty()) {
+        if (config.isDiscordEnabled())
+        {
+            if (config.getDiscordWebhookUrl() != null && !config.getDiscordWebhookUrl().isEmpty())
+            {
                 discordWebhook = new DiscordWebhook(this);
                 getLogger().info("Discord webhook integration enabled.");
-            } else {
+            }
+            else
+            {
                 getLogger().warning("Discord webhook is enabled but no URL is provided in the config.");
             }
-        }
-        
-        // Register PlaceholderAPI expansion if available
-        if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
-            new Placeholder(this).register();
-            getLogger().info("PlaceholderAPI integration enabled.");
         }
         
         // Metrics
@@ -159,7 +157,8 @@ public class AltDetector extends JavaPlugin
         metrics.addCustomChart(new SimplePie("expiration_time", () -> setting));
         metrics.addCustomChart(new SimplePie("database_type",   () -> database.toString()));
         metrics.addCustomChart(new SimplePie("supervanish",     () -> superVanish ? "Yes" : "No"));
-
+        metrics.addCustomChart(new SimplePie("discord",         () -> config.isDiscordEnabled() ? "Enabled" : "Disabled"));
+        
         getLogger().info("Metrics enabled if allowed by plugins/bStats/config.yml");
     }
     

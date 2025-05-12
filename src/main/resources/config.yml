@@ -44,6 +44,4 @@ discord:
   webhook-url: ''
   username: 'AltDetector'
   avatar-url: ''
-  embed-color: '#FF0000'
-  # Set to true to include all alts, false to only notify when alts are detected
-  notify-no-alts: false
+  embed-color: 0xff0000

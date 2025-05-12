@@ -1,5 +1,5 @@
 // AltDetector - Detects possible alt accounts
-// Copyright 2023
+// Copyright 2025
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -28,23 +28,28 @@ import java.util.Map;
 
 import org.bukkit.Bukkit;
 
-public class DiscordWebhook {
-    
+public class DiscordWebhook
+{
     private final AltDetector plugin;
     private final String webhookUrl;
     private final String username;
     private final String avatarUrl;
     private final int embedColor;
-    private final boolean notifyNoAlts;
     
-    public DiscordWebhook(AltDetector plugin) {
-        this.plugin = plugin;
-        this.webhookUrl = plugin.getConfig().getString("discord.webhook-url");
-        this.username = plugin.getConfig().getString("discord.username");
-        this.avatarUrl = plugin.getConfig().getString("discord.avatar-url");
+    // -------------------------------------------------------------------------
+    
+    // Constructor
+    
+    public DiscordWebhook(AltDetector plugin)
+    {
+        this.plugin     = plugin;
+        this.webhookUrl = plugin.config.getDiscordWebhookUrl();
+        this.username   = plugin.config.getDiscordUsername();
+        this.avatarUrl  = plugin.config.getDiscordAvatarUrl();
         this.embedColor = plugin.config.getDiscordEmbedColor();
-        this.notifyNoAlts = plugin.getConfig().getBoolean("discord.notify-no-alts");
     }
+    
+    // -------------------------------------------------------------------------
     
     /**
      * Sends a message about detected alts to Discord
@@ -52,27 +57,34 @@ public class DiscordWebhook {
      * @param content The alt detection message (already formatted and without color codes)
      * @param playerName The name of the player who joined
      */
-    public void sendAltMessage(final String content, final String playerName) {
-        // Skip if content is null or if it indicates no alts and notifications for no alts are disabled
-        if (content == null || (content.contains("has no known alts") && !notifyNoAlts)) {
+    public void sendAltMessage(final String content, final String playerName)
+    {
+        // Skip if content is null (no alts found)
+        if (content == null)
+        {
             return;
         }
         
         // Run async to not block the main thread
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, new Runnable() {
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, new Runnable()
+        {
             @Override
-            public void run() {
-                try {
+            public void run()
+            {
+                try
+                {
                     // Build the JSON payload
                     Map<String, Object> jsonMap = new HashMap<>();
                     
                     // Set username if provided
-                    if (username != null && !username.isEmpty()) {
+                    if (username != null && !username.isEmpty())
+                    {
                         jsonMap.put("username", username);
                     }
                     
                     // Set avatar URL if provided
-                    if (avatarUrl != null && !avatarUrl.isEmpty()) {
+                    if (avatarUrl != null && !avatarUrl.isEmpty())
+                    {
                         jsonMap.put("avatar_url", avatarUrl);
                     }
                     
@@ -103,31 +115,40 @@ public class DiscordWebhook {
                     connection.setRequestProperty("Content-Type", "application/json");
                     connection.setDoOutput(true);
                     
-                    try (OutputStream outputStream = connection.getOutputStream()) {
+                    try (OutputStream outputStream = connection.getOutputStream())
+                    {
                         byte[] input = jsonString.getBytes(StandardCharsets.UTF_8);
                         outputStream.write(input, 0, input.length);
                     }
                     
                     int responseCode = connection.getResponseCode();
-                    if (responseCode != 204) {
+                    if (responseCode != 204)
+                    {
                         plugin.getLogger().warning("Discord webhook returned response code: " + responseCode);
                     }
-                } catch (IOException | URISyntaxException e) {
+                }
+                catch (IOException | URISyntaxException e)
+                {
                     plugin.getLogger().warning("Failed to send Discord webhook: " + e.getMessage());
                 }
             }
         });
     }
     
+    // -------------------------------------------------------------------------
+    
     /**
      * Simple method to convert a Map to a JSON string
      */
-    private String mapToJson(Map<String, Object> map) {
+    private String mapToJson(Map<String, Object> map)
+    {
         StringBuilder json = new StringBuilder("{");
         boolean first = true;
         
-        for (Map.Entry<String, Object> entry : map.entrySet()) {
-            if (!first) {
+        for (Map.Entry<String, Object> entry : map.entrySet())
+        {
+            if (!first)
+            {
                 json.append(",");
             }
             first = false;
@@ -140,34 +161,51 @@ public class DiscordWebhook {
         return json.toString();
     }
     
+    // -------------------------------------------------------------------------
+    
     /**
      * Append a value to the JSON string builder
      */
-    private void appendValueAsJson(StringBuilder json, Object value) {
-        if (value instanceof String) {
+    private void appendValueAsJson(StringBuilder json, Object value)
+    {
+        if (value instanceof String)
+        {
             json.append("\"").append(((String) value).replace("\"", "\\\"")).append("\"");
-        } else if (value instanceof Number || value instanceof Boolean) {
+        }
+        else if (value instanceof Number || value instanceof Boolean)
+        {
             json.append(value);
-        } else if (value instanceof Map) {
+        }
+        else if (value instanceof Map)
+        {
             @SuppressWarnings("unchecked")
             Map<String, Object> nestedMap = (Map<String, Object>) value;
             json.append(mapToJson(nestedMap));
-        } else if (value instanceof Object[]) {
+        }
+        else if (value instanceof Object[])
+        {
             appendArrayAsJson(json, (Object[]) value);
-        } else {
+        }
+        else
+        {
             json.append("null");
         }
     }
     
+    // -------------------------------------------------------------------------
+    
     /**
      * Append an array to the JSON string builder
      */
-    private void appendArrayAsJson(StringBuilder json, Object[] array) {
+    private void appendArrayAsJson(StringBuilder json, Object[] array)
+    {
         json.append("[");
         boolean arrayFirst = true;
         
-        for (Object item : array) {
-            if (!arrayFirst) {
+        for (Object item : array)
+        {
+            if (!arrayFirst)
+            {
                 json.append(",");
             }
             arrayFirst = false;
@@ -176,4 +214,5 @@ public class DiscordWebhook {
         
         json.append("]");
     }
+
 }
