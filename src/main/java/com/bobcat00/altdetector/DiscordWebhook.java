@@ -91,7 +91,7 @@ public class DiscordWebhook
                     // Create embed
                     Map<String, Object> embed = new HashMap<>();
                     embed.put("title", "Alt Account Detection");
-                    embed.put("description", content);
+                    embed.put("description", "`" + content + "`");
                     embed.put("color", embedColor);
                     
                     // Add author (player) info
