@@ -197,6 +197,11 @@ public class Config
         return plugin.getConfig().getString("discord.username");
     }
     
+    public String getMCServerName()
+    {
+        return plugin.getConfig().getString("discord.mc-server-name");
+    }
+    
     public String getDiscordAvatarUrl()
     {
         return plugin.getConfig().getString("discord.avatar-url");
@@ -329,6 +334,7 @@ public class Config
             plugin.getConfig().set("discord.enabled",        false);
             plugin.getConfig().set("discord.webhook-url",    "");
             plugin.getConfig().set("discord.username",       "AltDetector");
+            plugin.getConfig().set("discord.mc-server-name", "Minecraft Server");
             plugin.getConfig().set("discord.avatar-url",     "");
             plugin.getConfig().set("discord.embed-color",    0xff0000);
         }
@@ -397,13 +403,14 @@ public class Config
             writer.write("delcmd-removedplural: \""    + plugin.getConfig().getString("delcmd-removedplural").replaceAll("\n", "\\\\n")    + "\"" + "\n");
             writer.write("\n");
             
-            writer.write("#Discord webhook integration"                                                                         + "\n");
-            writer.write("discord:"                                                                                             + "\n");
-            writer.write("  enabled: "        + plugin.getConfig().getBoolean("discord.enabled")                                + "\n");
-            writer.write("  webhook-url: '"   + plugin.getConfig().getString("discord.webhook-url")                       + "'" + "\n");
-            writer.write("  username: "       + plugin.getConfig().getString("discord.username")                                + "\n");
-            writer.write("  avatar-url: '"    + plugin.getConfig().getString("discord.avatar-url")                        + "'" + "\n");
-            writer.write("  embed-color: "    + String.format("0x%06x", plugin.getConfig().getInt("discord.embed-color"))       + "\n");
+            writer.write("#Discord webhook integration"                                                                            + "\n");
+            writer.write("discord:"                                                                                                + "\n");
+            writer.write("  enabled: "          + plugin.getConfig().getBoolean("discord.enabled")                                 + "\n");
+            writer.write("  webhook-url: '"     + plugin.getConfig().getString("discord.webhook-url")                       + "'"  + "\n");
+            writer.write("  username: '"        + plugin.getConfig().getString("discord.username")                          + "'"  + "\n");
+            writer.write("  mc-server-name: \"" + plugin.getConfig().getString("discord.mc-server-name")                    + "\"" + "\n");
+            writer.write("  avatar-url: '"      + plugin.getConfig().getString("discord.avatar-url")                        + "'"  + "\n");
+            writer.write("  embed-color: "      + String.format("0x%06x", plugin.getConfig().getInt("discord.embed-color"))        + "\n");
             
             writer.close();
         }

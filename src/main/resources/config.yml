@@ -43,5 +43,6 @@ discord:
   enabled: false
   webhook-url: ''
   username: 'AltDetector'
+  mc-server-name: "Minecraft Server"
   avatar-url: ''
   embed-color: 0xff0000

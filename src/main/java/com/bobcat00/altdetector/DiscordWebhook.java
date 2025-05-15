@@ -55,9 +55,9 @@ public class DiscordWebhook
      * Sends a message about detected alts to Discord
      * 
      * @param content The alt detection message (already formatted and without color codes)
-     * @param playerName The name of the player who joined
+     * @param authorName The Discord author name, usually the name of the Minecraft server
      */
-    public void sendAltMessage(final String content, final String playerName)
+    public void sendAltMessage(final String content, final String authorName)
     {
         // Skip if content is null (no alts found)
         if (content == null)
@@ -94,9 +94,9 @@ public class DiscordWebhook
                     embed.put("description", "`" + content + "`");
                     embed.put("color", embedColor);
                     
-                    // Add author (player) info
+                    // Add author info
                     Map<String, Object> author = new HashMap<>();
-                    author.put("name", playerName);
+                    author.put("name", authorName);
                     embed.put("author", author);
                     
                     // Add timestamp

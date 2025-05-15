@@ -194,7 +194,7 @@ public class Listeners implements Listener
                 // Send to Discord webhook if enabled
                 if (plugin.config.isDiscordEnabled() && plugin.discordWebhook != null && player != null)
                 {
-                    plugin.discordWebhook.sendAltMessage(cleanAltString, player.getName());
+                    plugin.discordWebhook.sendAltMessage(cleanAltString, plugin.config.getMCServerName());
                 }
             }
         }
