@@ -26,7 +26,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.bobcat00.altdetector.AltDetector;
 import com.zaxxer.hikari.HikariDataSource;
@@ -47,6 +49,10 @@ public abstract class Database
     // the names here will be all lower case. A Set is used so duplicate entries will
     // not occur.
     private Set<String> playerList = Collections.synchronizedSet(new HashSet<String>());
+    
+    // Cache of all known players and lists of their alt names. Key is the player name,
+    // value is a list of alt names. This is used for the PlaceholderAPI processing.
+    private Map<String, List<String>> playerAltList = new ConcurrentHashMap<String, List<String>>();
     
     // Default SQL statements. These are for SQLite. Other implementations can replace them.
     
@@ -237,6 +243,55 @@ public abstract class Database
         List<String> pl = new ArrayList<>(playerList);
         pl.sort(null);
         return pl;
+    }
+    
+    // -------------------------------------------------------------------------
+    
+    // Update alts for a player. This is for the playerAltList.
+    
+    private void updatePlayerAlts(String n)
+    {
+        // Get the player's UUID (return can be null)
+        PlayerDataType playerData = lookupOfflinePlayer(n);
+        if (playerData != null)
+        {
+            // Get that player's alts and save in altList
+            List<String> altList = getAltNames(playerData.uuid, playerData.uuid, plugin.expirationTime);
+            playerAltList.put(playerData.name, altList);
+        }
+    }
+    
+    // -------------------------------------------------------------------------
+    
+    // Generate playerAltList. This must be called after generatePlayerList and
+    // is only used by the PlaceholderAPI processing.
+    
+    public void generatePlayerAltList()
+    {
+        // Perform an alt lookup for each name in playerList
+        for (String n : playerList)
+        {
+            updatePlayerAlts(n);
+        }
+    }
+    
+    // -------------------------------------------------------------------------
+    
+    // Return a list of a player's alts from playerAltList. This is only used by
+    // the PlaceholderAPI processing and can be called on the main thread.
+    
+    public String getCachedAlts(String name)
+    {
+        String str = "";
+        
+        // Get cached list
+        List<String> altList = playerAltList.get(name);
+        if (altList != null)
+        {
+            str = String.join(plugin.config.getPlaceholderSeparator(), altList);
+        }
+        
+        return str;
     }
     
     // -------------------------------------------------------------------------
@@ -508,7 +563,7 @@ public abstract class Database
     public List<String> getAltNames(String uuid, String excludeUuid, int expirationTime)
     {
         List<String> altList = new ArrayList<String>();
-
+        
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(replacePrefix(getAlts)))
         {
@@ -585,6 +640,23 @@ public abstract class Database
     {
         // Get possible alts
         List<String> altList = getAltNames(uuid, uuid, expirationTime);
+        
+        // Update playerAltList for PlaceholderAPI support
+        if (plugin.placeholderEnabled)
+        {
+            boolean newEntry = !playerAltList.containsKey(name);
+            playerAltList.put(name, altList);
+            if (newEntry)
+            {
+                // If a new player has joined and has alts, check each of the alts in an
+                // attempt to link those back to the new player. This is not ideal, but
+                // it's the best way to keep the cached list as up to date as possible.
+                for (String n : altList)
+                {
+                    updatePlayerAlts(n);
+                }
+            }
+        }
         
         if (!altList.isEmpty())
         {

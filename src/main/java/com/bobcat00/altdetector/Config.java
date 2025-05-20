@@ -182,6 +182,16 @@ public class Config
         return plugin.getConfig().getString("delcmd-removedplural");
     }
     
+    public boolean isPlaceholderEnabled()
+    {
+        return plugin.getConfig().getBoolean("placeholder-enabled");
+    }
+    
+    public String getPlaceholderSeparator()
+    {
+        return plugin.getConfig().getString("placeholder-separator");
+    }
+    
     public boolean isDiscordEnabled()
     {
         return plugin.getConfig().getBoolean("discord.enabled");
@@ -329,6 +339,16 @@ public class Config
             plugin.getConfig().set("delcmd-removedplural", "&6{0} records removed");
         }
         
+        if (!contains("placeholder-enabled", true))
+        {
+                plugin.getConfig().set("placeholder-enabled", true);
+        }
+        
+        if (!contains("placeholder-separator", true))
+        {
+            plugin.getConfig().set("placeholder-separator", " ");
+        }
+        
         if (!contains("discord.enabled", true))
         {
             plugin.getConfig().set("discord.enabled",        false);
@@ -398,12 +418,19 @@ public class Config
             writer.write("altcmd-noperm: \""           + plugin.getConfig().getString("altcmd-noperm").replaceAll("\n", "\\\\n")           + "\"" + "\n");
             writer.write("\n");
             
-            writer.write("#Messages for alt delete command"                                                                                       + "\n");
+            writer.write("# Messages for alt delete command"                                                                                       + "\n");
             writer.write("delcmd-removedsingular: \""  + plugin.getConfig().getString("delcmd-removedsingular").replaceAll("\n", "\\\\n")  + "\"" + "\n");
             writer.write("delcmd-removedplural: \""    + plugin.getConfig().getString("delcmd-removedplural").replaceAll("\n", "\\\\n")    + "\"" + "\n");
             writer.write("\n");
             
-            writer.write("#Discord webhook integration"                                                                            + "\n");
+            writer.write("# PlaceholderAPI expansions"                                                            + "\n");
+            writer.write("# %altdetector_alts_<playername>%"                                                      + "\n");
+            writer.write("# <playername> is case-sensitive"                                                       + "\n");
+            writer.write("placeholder-enabled: "    + plugin.getConfig().getBoolean("placeholder-enabled")        + "\n");
+            writer.write("placeholder-separator: '" + plugin.getConfig().getString("placeholder-separator") + "'" + "\n");
+            writer.write("\n");
+            
+            writer.write("# Discord webhook integration"                                                                           + "\n");
             writer.write("discord:"                                                                                                + "\n");
             writer.write("  enabled: "          + plugin.getConfig().getBoolean("discord.enabled")                                 + "\n");
             writer.write("  webhook-url: '"     + plugin.getConfig().getString("discord.webhook-url")                       + "'"  + "\n");

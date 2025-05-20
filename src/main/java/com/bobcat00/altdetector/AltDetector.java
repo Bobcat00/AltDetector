@@ -31,12 +31,13 @@ import com.bobcat00.altdetector.database.Sqlite;
 
 public class AltDetector extends JavaPlugin
 {
-    int expirationTime = 60;
+    public int expirationTime = 60;
     public Config config;
     Database database;
     Listeners listeners;
     boolean superVanish = false;
     public DiscordWebhook discordWebhook;
+    public boolean placeholderEnabled = false;
     
     @Override
     public void onEnable()
@@ -135,6 +136,16 @@ public class AltDetector extends JavaPlugin
             }
         }
         
+        // Register PlaceholderAPI expansion
+        if (config.isPlaceholderEnabled() && (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null))
+        {
+            placeholderEnabled = true;
+            new Placeholder(this).register();
+            // Generate player alt list for PlaceholderAPI expansions
+            database.generatePlayerAltList();
+            getLogger().info("PlaceholderAPI integration enabled.");
+        }
+        
         // Metrics
         
         int pluginId = 4862;
@@ -158,6 +169,7 @@ public class AltDetector extends JavaPlugin
         metrics.addCustomChart(new SimplePie("database_type",   () -> database.toString()));
         metrics.addCustomChart(new SimplePie("supervanish",     () -> superVanish ? "Yes" : "No"));
         metrics.addCustomChart(new SimplePie("discord",         () -> config.isDiscordEnabled() ? "Enabled" : "Disabled"));
+        metrics.addCustomChart(new SimplePie("placeholder",     () -> placeholderEnabled ? "Enabled" : "Disabled"));
         
         getLogger().info("Metrics enabled if allowed by plugins/bStats/config.yml");
     }

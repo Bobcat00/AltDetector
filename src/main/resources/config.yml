@@ -34,9 +34,15 @@ altcmd-playernotfound: "&4{0} not found"
 altcmd-paramerror: "&4Must specify at most one player"
 altcmd-noperm: "&4You do not have permission for this command"
 
-#Messages for alt delete command
+# Messages for alt delete command
 delcmd-removedsingular: "&6{0} record removed"
 delcmd-removedplural: "&6{0} records removed"
+
+# PlaceholderAPI expansions
+# %altdetector_alts_<playername>%
+# <playername> is case-sensitive
+placeholder-enabled: true
+placeholder-separator: ' '
 
 # Discord webhook integration
 discord:
